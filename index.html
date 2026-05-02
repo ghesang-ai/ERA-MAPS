@@ -382,7 +382,7 @@ const STORES_RAW=[{"id":"E396","name":"Erafone Andmore Ruko Itc Roxy Mas","type"
 // Sales scores pre-loaded from data
 
 let map, markers=[], activeEl=null, curS=null;
-let fT='all', fA='all', fSales='all', fQ='', is3D=true;
+let fT=new Set(['all']), fA=new Set(['all']), fSales=new Set(['all']), fQ='', is3D=true;
 
 
 // Clock
@@ -605,10 +605,10 @@ function openWA(){if(curS&&curS.hp)window.open(`https://wa.me/${curS.hp}`,'_blan
 function getFil(){
   const q=fQ.toLowerCase();
   return STORES_RAW.filter(s=>{
-    const mT=fT==='all'||s.type===fT;
-    const mA=fA==='all'||s.area===fA||s.city===fA;
+    const mT=fT.has('all')||fT.has(s.type);
+    const mA=fA.has('all')||fA.has(s.area)||fA.has(s.city);
     const sc=s.skor||70;
-    const mS=fSales==='all'||(fSales==='high'&&sc>=80)||(fSales==='mid'&&sc>=60&&sc<80)||(fSales==='low'&&sc<60);
+    const mS=fSales.has('all')||(fSales.has('high')&&sc>=80)||(fSales.has('mid')&&sc>=60&&sc<80)||(fSales.has('low')&&sc<60);
     const hay=[s.name,s.id,s.city,s.mall,s.area,s.addr,s.sl].join(' ').toLowerCase();
     const words=q.split(/\s+/).filter(Boolean);
     const mQ=!q||words.every(w=>hay.includes(w));
@@ -628,9 +628,39 @@ function applyFil(){
     map.fitBounds(bounds,{padding:{top:80,bottom:80,left:340,right:80},maxZoom:14,duration:600});
   }
 }
-function setT(el,v){document.querySelectorAll('[data-t]').forEach(c=>c.className='chip');el.className='chip on'+(v!=='all'?' '+(TCL[v]||''):'');fT=v;applyFil();}
-function setA(el,v){document.querySelectorAll('[data-a]').forEach(c=>c.className='chip');el.className='chip on';fA=v;applyFil();}
-function setSales(el,v){document.querySelectorAll('[data-s]').forEach(c=>c.className='chip');el.className='chip on';fSales=v;applyFil();}
+function toggleSet(set,v){
+  if(v==='all'){set.clear();set.add('all');}
+  else{
+    set.delete('all');
+    if(set.has(v))set.delete(v); else set.add(v);
+    if(set.size===0)set.add('all');
+  }
+}
+function setT(el,v){
+  toggleSet(fT,v);
+  document.querySelectorAll('[data-t]').forEach(c=>{
+    const cv=c.getAttribute('data-t');
+    const on=fT.has(cv);
+    c.className='chip'+(on?' on'+(cv!=='all'?' '+(TCL[cv]||''):''):'');
+  });
+  applyFil();
+}
+function setA(el,v){
+  toggleSet(fA,v);
+  document.querySelectorAll('[data-a]').forEach(c=>{
+    const cv=c.getAttribute('data-a');
+    c.className='chip'+(fA.has(cv)?' on':'');
+  });
+  applyFil();
+}
+function setSales(el,v){
+  toggleSet(fSales,v);
+  document.querySelectorAll('[data-s]').forEach(c=>{
+    const cv=c.getAttribute('data-s');
+    c.className='chip'+(fSales.has(cv)?' on':'');
+  });
+  applyFil();
+}
 function doFilter(){fQ=document.getElementById('search').value;applyFil();}
 
 function renderList(stores){
