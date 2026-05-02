@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ERA-MAPS · Region 5 · SIERA</title>
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f0f4f8;--surface:#fff;--surface2:#f7f9fc;--border:#e2e8f0;--border2:#cbd5e1;
+  --blue:#2563eb;--blue-lt:#eff6ff;--blue-md:#bfdbfe;
+  --teal:#0891b2;--teal-lt:#ecfeff;--indigo:#4f46e5;
+  --text:#0f172a;--text2:#475569;--text3:#94a3b8;--text4:#cbd5e1;
+  --ok:#059669;--ok-lt:#d1fae5;--warn:#d97706;--warn-lt:#fef3c7;--bad:#dc2626;--bad-lt:#fee2e2;
+  --ef:#dc2626;--ib:#374151;--ss:#2563eb;--em:#d97706;--eb:#0891b2;--hw:#7c3aed;--ho:#be185d;
+  --r:10px;--r2:14px;
+  --sh:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --sh2:0 4px 16px rgba(0,0,0,.08),0 1px 4px rgba(0,0,0,.04);
+  --font:'Plus Jakarta Sans',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);font-family:var(--font);color:var(--text)}
+
+#topbar{position:absolute;top:0;left:0;right:0;z-index:50;height:60px;
+  background:var(--surface);border-bottom:1px solid var(--border);box-shadow:var(--sh);
+  display:flex;align-items:center;padding:0 20px;gap:0}
+.brand{display:flex;align-items:center;gap:11px;flex-shrink:0}
+.brand-icon{width:36px;height:36px;border-radius:10px;
+  background:linear-gradient(135deg,#2563eb,#0891b2);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.brand-icon svg{width:18px;height:18px;fill:none;stroke:#fff;stroke-width:2}
+.brand-name{font-size:15px;font-weight:800;color:var(--text);letter-spacing:-.3px}
+.brand-name span{color:var(--blue)}
+.brand-sub{font-size:11px;color:var(--text3);margin-top:1px}
+.tsep{width:1px;height:28px;background:var(--border);margin:0 18px;flex-shrink:0}
+.tpills{display:flex;gap:6px}
+.tpill{display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;
+  background:var(--surface2);border:1px solid var(--border);
+  font-size:12px;font-weight:500;color:var(--text2)}
+.tpill-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.tpill-num{font-weight:700;color:var(--text);font-size:13px}
+.tright{margin-left:auto;display:flex;align-items:center;gap:10px}
+.live-badge{display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;
+  background:#dcfce7;border:1px solid #bbf7d0;font-size:11px;font-weight:600;color:#16a34a}
+.ldot{width:6px;height:6px;border-radius:50%;background:#16a34a;animation:lp 2s infinite}
+@keyframes lp{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(22,163,74,.4)}50%{opacity:.7;box-shadow:0 0 0 5px rgba(22,163,74,0)}}
+.clock-badge{padding:5px 11px;border-radius:8px;background:var(--surface2);
+  border:1px solid var(--border);font-size:11px;font-weight:600;color:var(--text2);letter-spacing:.5px}
+.btn-3d{padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;
+  border:1px solid var(--border2);color:var(--text2);background:var(--surface);
+  cursor:pointer;transition:all .15s;font-family:var(--font)}
+.btn-3d:hover,.btn-3d.on{border-color:var(--blue);color:var(--blue);background:var(--blue-lt)}
+
+#map{position:absolute;inset:0;top:60px}
+
+
+
+#sidebar{position:absolute;top:72px;left:12px;bottom:12px;z-index:20;width:292px;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);
+  box-shadow:var(--sh2);display:flex;flex-direction:column;overflow:hidden;
+  animation:sil .3s cubic-bezier(.4,0,.2,1)}
+@keyframes sil{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:translateX(0)}}
+.sb-head{padding:14px 14px 12px;border-bottom:1px solid var(--border);
+  background:linear-gradient(180deg,var(--blue-lt),var(--surface))}
+.sb-title{font-size:11px;font-weight:700;color:var(--blue);letter-spacing:1px;text-transform:uppercase;margin-bottom:9px}
+.sw{position:relative}
+.sw svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text3);pointer-events:none}
+#search{width:100%;padding:8px 10px 8px 32px;background:var(--surface);
+  border:1px solid var(--border);border-radius:8px;color:var(--text);
+  font-size:12px;font-family:var(--font);outline:none;transition:all .15s}
+#search::placeholder{color:var(--text3)}
+#search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+
+.fblock{padding:10px 14px;border-bottom:1px solid var(--border)}
+.flbl{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:7px}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{font-size:11px;font-weight:500;padding:4px 10px;border-radius:20px;
+  border:1px solid var(--border);color:var(--text2);background:var(--surface2);
+  cursor:pointer;transition:all .15s;font-family:var(--font)}
+.chip:hover{border-color:var(--blue-md);color:var(--blue);background:var(--blue-lt)}
+.chip.on{border-color:var(--blue);color:var(--blue);background:var(--blue-lt);font-weight:600}
+.chip.oef{border-color:#fecaca;color:var(--ef);background:var(--bad-lt);font-weight:600}
+.chip.oib{border-color:#d1d5db;color:var(--ib);background:#f9fafb;font-weight:600}
+.chip.oss{border-color:var(--blue-md);color:var(--blue);background:var(--blue-lt);font-weight:600}
+.chip.oem{border-color:#fde68a;color:var(--warn);background:var(--warn-lt);font-weight:600}
+.chip.oeb{border-color:#a5f3fc;color:var(--teal);background:var(--teal-lt);font-weight:600}
+.chip.ohw{border-color:#ddd6fe;color:var(--hw);background:#f5f3ff;font-weight:600}
+
+.scount{padding:8px 14px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;background:var(--surface2)}
+.scount-lbl{font-size:11px;color:var(--text3);font-weight:500}
+.scount-val{font-size:13px;font-weight:800;color:var(--blue)}
+
+#store-list{flex:1;overflow-y:auto;padding:6px 8px}
+#store-list::-webkit-scrollbar{width:3px}
+#store-list::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.si{padding:9px 10px;border-radius:8px;cursor:pointer;margin-bottom:3px;
+  border:1px solid transparent;transition:all .12s;display:flex;align-items:center;gap:10px}
+.si:hover{background:var(--surface2);border-color:var(--border)}
+.si.active{background:var(--blue-lt);border-color:var(--blue-md)}
+
+.si-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.si-info{flex:1;min-width:0}
+.si-name{font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.si-sub{font-size:10px;color:var(--text3);margin-top:2px}
+.si-badge{font-size:10px;font-weight:600;flex-shrink:0;padding:2px 7px;border-radius:10px;border:1px solid}
+
+/* DETAIL */
+#detail{position:absolute;top:72px;right:12px;z-index:20;width:272px;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);
+  box-shadow:var(--sh2);overflow:hidden;display:none;
+  animation:sir .2s cubic-bezier(.4,0,.2,1)}
+#detail.show{display:block}
+@keyframes sir{from{opacity:0;transform:translateX(10px)}to{opacity:1;transform:translateX(0)}}
+.dh{padding:14px 14px 12px;border-bottom:1px solid var(--border);position:relative}
+.dh-bg{position:absolute;inset:0;background:linear-gradient(135deg,var(--blue-lt),#ecfeff)}
+.dh>*{position:relative}
+.dcls{position:absolute;top:10px;right:10px;z-index:2;width:22px;height:22px;
+  border-radius:50%;background:var(--surface);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;color:var(--text3);cursor:pointer;transition:all .15s;line-height:1}
+.dcls:hover{background:var(--bad-lt);border-color:#fecaca;color:var(--bad)}
+.dbdg{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;
+  padding:3px 9px;border-radius:20px;border:1px solid;margin-bottom:8px;letter-spacing:.3px}
+.did{font-size:10px;color:var(--text3);font-weight:500;margin-bottom:3px}
+.dname{font-size:15px;font-weight:800;color:var(--text);line-height:1.25;margin-bottom:3px;letter-spacing:-.3px}
+.daddr-text{font-size:10px;color:var(--text2);line-height:1.6;margin-bottom:0}
+
+/* Tabs */
+.dtabs{display:flex;border-bottom:1px solid var(--border);background:var(--surface2)}
+.dtab{flex:1;padding:8px 10px;font-size:11px;font-weight:600;color:var(--text3);
+  cursor:pointer;text-align:center;border-bottom:2px solid transparent;transition:all .15s}
+.dtab.on{color:var(--blue);border-color:var(--blue);background:var(--surface)}
+.dtab-pane{display:none;padding:12px 14px}
+.dtab-pane.show{display:block}
+
+/* Info grid */
+.hgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.hcell{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px}
+.hcell-lbl{font-size:9px;font-weight:700;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px}
+.hcell-val{font-size:14px;font-weight:800;color:var(--text);letter-spacing:-.3px}
+.hcell-val.ok{color:var(--ok)}.hcell-val.warn{color:var(--warn)}.hcell-val.bad{color:var(--bad)}
+.hcell-val.blue{color:var(--blue)}
+
+/* SL section */
+.sl-row{display:flex;align-items:center;gap:10px}
+.sl-av{width:34px;height:34px;border-radius:10px;flex-shrink:0;
+  background:linear-gradient(135deg,var(--blue),var(--teal));
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:800;color:#fff}
+.sl-name{font-size:13px;font-weight:700;color:var(--text)}
+.sl-role{font-size:10px;color:var(--text3);margin-top:1px}
+
+/* Alamat section */
+.addr-box{background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+  padding:10px;font-size:11px;color:var(--text2);line-height:1.6;margin-bottom:10px}
+
+/* Action buttons */
+.det-actions{padding:10px 14px;display:flex;flex-direction:column;gap:6px}
+.abtn{display:flex;align-items:center;justify-content:center;gap:7px;padding:8px;
+  border-radius:8px;font-size:11px;font-weight:600;border:1px solid var(--border);
+  background:var(--surface2);color:var(--text2);cursor:pointer;transition:all .15s;font-family:var(--font)}
+.abtn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0}
+.abtn:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-lt)}
+.abtn.wa:hover{border-color:#86efac;color:#16a34a;background:#f0fdf4}
+
+/* BOTTOM BAR */
+#bbar{position:absolute;bottom:12px;left:316px;right:56px;z-index:20;
+  background:var(--surface);border:1px solid var(--border);border-radius:10px;
+  box-shadow:var(--sh2);padding:8px 16px;display:flex;align-items:center;gap:12px}
+.bbar-lbl{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:1px;text-transform:uppercase;flex-shrink:0}
+.leg{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:500;color:var(--text2)}
+.legdot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.bbar-coord{margin-left:auto;font-size:10px;color:var(--text3);flex-shrink:0}
+
+#ctrls{position:absolute;bottom:12px;right:12px;z-index:20;display:flex;flex-direction:column;gap:4px}
+.cbtn{width:34px;height:34px;border-radius:8px;background:var(--surface);
+  border:1px solid var(--border);box-shadow:var(--sh);display:flex;align-items:center;
+  justify-content:center;cursor:pointer;transition:all .15s;font-size:16px;color:var(--text2);font-weight:500}
+.cbtn:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-lt)}
+
+/* LOADING */
+#loading{position:absolute;inset:0;z-index:200;background:var(--surface);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;transition:opacity .4s}
+.load-icon{width:52px;height:52px;border-radius:14px;
+  background:linear-gradient(135deg,var(--blue),var(--teal));
+  display:flex;align-items:center;justify-content:center;
+  animation:lb .8s ease-in-out infinite alternate}
+@keyframes lb{from{transform:translateY(-4px)}to{transform:translateY(4px)}}
+.load-icon svg{width:26px;height:26px;stroke:#fff;fill:none;stroke-width:2}
+.load-title{font-size:20px;font-weight:800;color:var(--text);letter-spacing:-.5px}
+.load-sub{font-size:13px;color:var(--text3)}
+.load-bar{width:180px;height:3px;background:var(--border);border-radius:10px;overflow:hidden}
+.load-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--teal));
+  border-radius:10px;animation:lf 1.4s ease-in-out infinite}
+@keyframes lf{0%{width:0%;margin-left:0}50%{width:60%;margin-left:0}100%{width:0%;margin-left:100%}}
+.load-msg{font-size:11px;color:var(--text3);font-weight:500}
+
+.mapboxgl-popup-content{background:var(--surface)!important;border:1px solid var(--border)!important;
+  border-radius:10px!important;padding:10px 14px!important;font-family:var(--font)!important;
+  box-shadow:var(--sh2)!important}
+.mapboxgl-popup-tip{border-top-color:var(--surface)!important}
+.mapboxgl-popup-close-button{color:var(--text3)!important;top:6px!important;right:8px!important}
+.pp-name{font-size:13px;font-weight:700;color:var(--text);margin-bottom:2px}
+.pp-sub{font-size:11px;color:var(--text2)}
+.mapboxgl-ctrl-bottom-right{bottom:58px!important;right:50px!important}
+.mapboxgl-ctrl-group{background:var(--surface)!important;border:1px solid var(--border)!important;
+  border-radius:8px!important;box-shadow:var(--sh)!important}
+.mapboxgl-ctrl-group button{background:transparent!important}
+.mapboxgl-ctrl-group button:hover{background:var(--blue-lt)!important}
+@keyframes mping{0%{transform:scale(1);opacity:.6}100%{transform:scale(2.6);opacity:0}}
+</style>
+</head>
+<body>
+
+<div id="loading">
+  <div class="load-icon"><svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg></div>
+  <div class="load-title">ERA-MAPS</div>
+  <div class="load-sub">Smart Integrated Erajaya Retail Analytics</div>
+  <div class="load-bar"><div class="load-fill"></div></div>
+  <div class="load-msg" id="lmsg">Memuat peta...</div>
+</div>
+
+<div id="topbar">
+  <div class="brand">
+    <div class="brand-icon"><svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg></div>
+    <div>
+      <div class="brand-name">ERA-MAPS <span>· Region 5</span></div>
+      <div class="brand-sub">Smart Integrated Erajaya Retail Analytics</div>
+    </div>
+  </div>
+  <div class="tsep"></div>
+  <div class="tpills">
+    <div class="tpill"><div class="tpill-dot" style="background:var(--ef)"></div><span class="tpill-num" id="cef">-</span> Erafone</div>
+    <div class="tpill"><div class="tpill-dot" style="background:var(--eb)"></div><span class="tpill-num" id="ceb">-</span> Erablue</div>
+    <div class="tpill"><div class="tpill-dot" style="background:var(--ib)"></div><span class="tpill-num" id="cib">-</span> iBox</div>
+    <div class="tpill"><div class="tpill-dot" style="background:var(--blue)"></div><span class="tpill-num" id="ctot">-</span> Total</div>
+  </div>
+  <div class="tright">
+    <div class="live-badge"><div class="ldot"></div>Live</div>
+    <div class="clock-badge" id="clock">--:--</div>
+    <button class="btn-3d on" id="b3d" onclick="toggle3D()">3D Gedung</button>
+  </div>
+</div>
+
+
+
+<div id="map"></div>
+
+<div id="sidebar">
+  <div class="sb-head">
+    <div class="sb-title">Pencarian Toko</div>
+    <div class="sw">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input id="search" placeholder="Cari nama toko, kode, kota..." oninput="doFilter()">
+    </div>
+  </div>
+  <div class="fblock">
+    <div class="flbl">Tipe Toko</div>
+    <div class="chips">
+      <span class="chip on"  data-t="all"           onclick="setT(this,'all')">Semua</span>
+      <span class="chip"     data-t="Erafone"        onclick="setT(this,'Erafone')">Erafone</span>
+      <span class="chip"     data-t="Erablue"        onclick="setT(this,'Erablue')">Erablue</span>
+      <span class="chip"     data-t="iBox"           onclick="setT(this,'iBox')">iBox</span>
+      <span class="chip"     data-t="Samsung"        onclick="setT(this,'Samsung')">Samsung</span>
+      <span class="chip"     data-t="Erafone & More" onclick="setT(this,'Erafone & More')">E&More</span>
+      <span class="chip"     data-t="Huawei"         onclick="setT(this,'Huawei')">Huawei</span>
+    </div>
+  </div>
+  <div class="fblock">
+    <div class="flbl">Area</div>
+    <div class="chips">
+      <span class="chip on" data-a="all"            onclick="setA(this,'all')">Semua</span>
+      <span class="chip"    data-a="Jakarta Pusat"  onclick="setA(this,'Jakarta Pusat')">Jakpus</span>
+      <span class="chip"    data-a="Jakarta Barat"  onclick="setA(this,'Jakarta Barat')">Jakbar</span>
+      <span class="chip"    data-a="Tangerang"      onclick="setA(this,'Tangerang')">Tangerang</span>
+      <span class="chip"    data-a="Kab. Tangerang" onclick="setA(this,'Kab. Tangerang')">Kab. Tng</span>
+      <span class="chip"    data-a="Tangsel"        onclick="setA(this,'Tangsel')">Tangsel</span>
+      <span class="chip"    data-a="Banten"         onclick="setA(this,'Banten')">Banten</span>
+    </div>
+  </div>
+  <div class="fblock">
+    <div class="flbl">Sales Store</div>
+    <div class="chips">
+      <span class="chip on" data-s="all"       onclick="setSales(this,'all')">Semua</span>
+      <span class="chip"    data-s="high"      onclick="setSales(this,'high')">On Track (&ge;80%)</span>
+      <span class="chip"    data-s="mid"       onclick="setSales(this,'mid')">At Risk (60-79%)</span>
+      <span class="chip"    data-s="low"       onclick="setSales(this,'low')">Below Target (&lt;60%)</span>
+    </div>
+  </div>
+  <div class="scount">
+    <span class="scount-lbl">Menampilkan toko</span>
+    <span class="scount-val" id="sct">-</span>
+  </div>
+  <div id="store-list"></div>
+</div>
+
+<div id="detail">
+  <div class="dh">
+    <div class="dh-bg"></div>
+    <div class="dcls" onclick="closeDet()">✕</div>
+    <div class="dbdg" id="dbdg">—</div>
+    <div class="did" id="did">—</div>
+    <div class="dname" id="dname">—</div>
+  </div>
+  <div class="dtabs">
+    <div class="dtab on" onclick="switchTab(this,'info')">Info</div>
+    <div class="dtab" onclick="switchTab(this,'sales')">Sales</div>
+    <div class="dtab" onclick="switchTab(this,'alamat')">Alamat</div>
+  </div>
+  <div class="dtab-pane show" id="tab-info">
+    <div class="hgrid">
+      <div class="hcell"><div class="hcell-lbl">Kota</div><div class="hcell-val blue" id="d-city">—</div></div>
+      <div class="hcell"><div class="hcell-lbl">Area</div><div class="hcell-val" id="d-area">—</div></div>
+      <div class="hcell"><div class="hcell-lbl">Tipe</div><div class="hcell-val" id="d-type">—</div></div>
+      <div class="hcell"><div class="hcell-lbl">Mall/Lokasi</div><div class="hcell-val" id="d-mall" style="font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">—</div></div>
+    </div>
+    <div class="sl-row">
+      <div class="sl-av" id="d-av">—</div>
+      <div><div class="sl-name" id="d-sl">—</div><div class="sl-role">Store Leader</div></div>
+    </div>
+  </div>
+  <div class="dtab-pane" id="tab-sales">
+    <div class="hgrid">
+      <div class="hcell"><div class="hcell-lbl">Sales MTD</div><div class="hcell-val ok" id="d-mtd">—</div></div>
+      <div class="hcell"><div class="hcell-lbl">Target</div><div class="hcell-val" id="d-target">—</div></div>
+      <div class="hcell"><div class="hcell-lbl">Achievement</div><div class="hcell-val" id="d-ach">—</div></div>
+      <div class="hcell"><div class="hcell-lbl">Status</div><div class="hcell-val" id="d-status">—</div></div>
+    </div>
+    <div style="font-size:10px;color:var(--text3);margin-top:6px;line-height:1.6;background:var(--surface2);padding:8px;border-radius:8px;border:1px solid var(--border)">
+      Data sales akan tersedia setelah integrasi dengan Google Sheets ERA-SALES. Skor sementara diacak untuk demo.
+    </div>
+  </div>
+  <div class="dtab-pane" id="tab-alamat">
+    <div class="addr-box" id="d-addr">—</div>
+  </div>
+  <div class="det-actions">
+    <button class="abtn" onclick="openMaps()">
+      <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+      Buka di Google Maps
+    </button>
+    <button class="abtn wa" onclick="openWA()">
+      <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+      WhatsApp Store Leader
+    </button>
+  </div>
+</div>
+
+<div id="bbar">
+  <span class="bbar-lbl">Legenda</span>
+  <div class="leg"><div class="legdot" style="background:var(--ef)"></div>Erafone</div>
+  <div class="leg"><div class="legdot" style="background:var(--eb)"></div>Erablue</div>
+  <div class="leg"><div class="legdot" style="background:var(--ib)"></div>iBox</div>
+  <div class="leg"><div class="legdot" style="background:var(--ss)"></div>Samsung</div>
+  <div class="leg"><div class="legdot" style="background:var(--em)"></div>E&More</div>
+  <div class="leg"><div class="legdot" style="background:var(--hw)"></div>Huawei</div>
+  <div class="bbar-coord" id="coord">Gerakkan kursor ke peta</div>
+</div>
+<div id="ctrls">
+  <div class="cbtn" onclick="resetView()" title="Reset">⊕</div>
+  <div class="cbtn" onclick="map&&map.zoomIn()">+</div>
+  <div class="cbtn" onclick="map&&map.zoomOut()">−</div>
+</div>
+
+<script>
+const TOKEN='pk.eyJ1IjoiZ2hlc2FuZyIsImEiOiJjbW9vMWhkdHkxZHB1MzFva3FlaTU3ZDJ5In0.1rCAdRXjBWqk8k1FshLKIw';
+const TC={Erafone:'#dc2626',Erablue:'#0891b2',iBox:'#374151',Samsung:'#2563eb','Erafone & More':'#d97706',Huawei:'#7c3aed',Honor:'#be185d'};
+const TCL={Erafone:'oef',Erablue:'oeb',iBox:'oib',Samsung:'oss','Erafone & More':'oem',Huawei:'ohw'};
+const BDGC={
+  Erafone:['#fee2e2','#dc2626'],Erablue:['#ecfeff','#0891b2'],iBox:['#f3f4f6','#374151'],
+  Samsung:['#eff6ff','#2563eb'],'Erafone & More':['#fef3c7','#d97706'],
+  Huawei:['#f5f3ff','#7c3aed'],Honor:['#fdf2f8','#be185d']
+};
+
+const STORES_RAW=[{"id":"E396","name":"Erafone Andmore Ruko Itc Roxy Mas","type":"Erafone & More","city":"Jakarta Barat","area":"Jakpus","mall":"Ruko Itc Roxy Mas","sl":"Panji Arsy Arya Dillah","hp":"6288707700830","addr":"Kompleks ITC Roxy Mas Jl. KH. Hasyim Ashari No.125, Blok C2 No 4-5, RT.17/RW.06 Kel. Cideng, Kec. Gambir, Jakarta Pusat 10150","lat":-6.1661,"lng":106.8099,"method":"EXACT_MALL","skor":90,"mtd":"1.3B","target":"5.6B"},{"id":"E096","name":"Erafone 2 Itc Roxy Mas","type":"Erafone","city":"Jakarta Pusat","area":"Jakpus","mall":"Itc Roxy Mas","sl":"Achmad Fauzan","hp":"6287877698466","addr":"ITC Roxy Mas Lantai 2 No. 85, Jl. Kh Hasyim Ashari No.125, RT.12/RW.8, Cideng, Kecamatan Gambir, Kota Jakarta Pusat, Daerah Khusus Ibukota Jakarta 10150","lat":-6.1661,"lng":106.8099,"method":"EXACT_MALL","skor":65,"mtd":"1.8B","target":"5.6B"},{"id":"E037","name":"Erafone Gajah Mada Plaza","type":"Erafone","city":"Jakarta Pusat","area":"Jakpus","mall":"Gajah Mada Plaza","sl":"Ma'Ruf Wijaya","hp":"6283807745664","addr":"Gajah Mada Plaza Lantai 2 #65, Jl. Gajah Mada No.19-26, RT.2/RW.1, Petojo Utara, Kecamatan Gambir, Daerah Khusus Ibukota Jakarta 10130","lat":-6.1639,"lng":106.8167,"method":"EXACT_MALL","skor":93,"mtd":"4.3B","target":"4.5B"},{"id":"E216","name":"Erafone Senayan Park","type":"Erafone","city":"Jakarta Pusat","area":"Jakpus","mall":"Senayan Park","sl":"Cahyo Suhendro","hp":"6285775411012","addr":"Senayan Park Mall, Jln. Gerbang Pemuda No. 3 RT. 1 RW. 3, Gelora Kec. Tanah Abang Jakarta Pusat 10270","lat":-6.2185,"lng":106.8017,"method":"EXACT_MALL","skor":87,"mtd":"2.8B","target":"1.7B"},{"id":"E281","name":"Erafone 3.0 Senayan City","type":"Erafone","city":"Jakarta Pusat","area":"Jakpus","mall":"Senayan City","sl":"Mohamad Roy Rojiani","hp":"6281295221353","addr":"Senayan City Lantai 4 Lot 19 No. 37-39, Jl. Asia Afrika No.19, RW.3, Gelora, Kecamatan Tanah Abang, Kota Jakarta Pusat, Daerah Khusus Ibukota Jakarta 10270","lat":-6.2235,"lng":106.7992,"method":"EXACT_MALL","skor":63,"mtd":"1.9B","target":"4.8B"},{"id":"E678","name":"Erafone Multibrand Bendungan Hilir","type":"Erafone","city":"Jakarta Pusat","area":"Jakpus","mall":"Ruko Bendungan Hilir","sl":"Dyah Laras Safitri","hp":"6287872297994","addr":"Jl. Bendungan Hilir Raya No. 12B 02/04 Kel. Bendungan Hilir  Kec. Tanah Abang","lat":-6.208,"lng":106.8121,"method":"EXACT_MALL","skor":85,"mtd":"1.7B","target":"5.1B"},{"id":"E898","name":"Erafone Mb Samanhudi","type":"Erafone","city":"Jakarta Pusat","area":"Jakpus","mall":"Ruko Samanhudi","sl":"Danang Setyawan","hp":"6289693534300","addr":"Jl. Samanhudi No 46 Rt 1/ Rw 7 Ps. Baru Kec Sawah Besar Jakarta Pusat 10710","lat":-6.1635,"lng":106.8379,"method":"EXACT_MALL","skor":84,"mtd":"2.8B","target":"4.0B"},{"id":"F073","name":"Erafone 2.5 Agora Mall","type":"Erafone","city":"Jakarta Pusat","area":"Jakpus","mall":"Agora","sl":"Bagus Purbantoro","hp":"6281517348893","addr":"JL.M.H.THAMRIN RT.9/RW.5,KB KECAMATAN TANAH ABANG,KOTA JAKARTA PUSAT,DAERAH KHUSUS IBUKOTA JAKARTA","lat":-6.1914,"lng":106.8252,"method":"EXACT_MALL","skor":67,"mtd":"4.6B","target":"1.5B"},{"id":"E047","name":"Erafone 1 Itc Cempaka Mas","type":"Erafone","city":"Jakarta Pusat","area":"Jakpus","mall":"Itc Cempaka Mas","sl":"Rizki Maulana Sidiq","hp":"6285782953531","addr":"ITC Cempaka Mas Lt.4 Blok L No. 612-613 Jl. Cemp. Mas Tim. No.586, RW.8, Sumur Batu, Kec. Kemayoran, Kota Jakarta Pusat, Daerah Khusus Ibukota Jakarta 10640","lat":-6.1698,"lng":106.86,"method":"EXACT_MALL","skor":60,"mtd":"4.1B","target":"3.4B"},{"id":"E113","name":"Erafone Grand Indonesia","type":"Erafone","city":"Jakarta Pusat","area":"Jakpus","mall":"Grand Indonesia","sl":"Erwin Ilyas","hp":"6287776337231","addr":"Grand Indonesia Lt 3 East Mall, Jl. M.H. Thamrin No.1, Menteng, Kec. Menteng, Kota Jakarta Pusat, Daerah Khusus Ibukota Jakarta 10310","lat":-6.1952,"lng":106.8213,"method":"EXACT_MALL","skor":59,"mtd":"1.8B","target":"5.7B"},{"id":"E038","name":"Erafone Mal Atrium Senen (Erafone Millenium Mall)","type":"Erafone","city":"Jakarta Pusat","area":"Jakpus","mall":"Plaza Atrium","sl":"Khoirul Amirudin","hp":"6281380064450","addr":"Millenium Mall, Lantai LG 59 B, Jl. Senen Raya No.135, RW.2, Senen, Kec. Senen, Kota Jakarta Pusat, Daerah Khusus Ibukota Jakarta 10410","lat":-6.1862,"lng":106.8266,"method":"CITY_FALLBACK","skor":56,"mtd":"1.2B","target":"2.0B"},{"id":"E137","name":"Erafone Green Pramuka Square","type":"Erafone","city":"Jakarta Pusat","area":"Jakpus","mall":"Green Pramuka Square","sl":"Andi Prastowo","hp":"6281517352555","addr":"Mall Green Pramuka Lantai LG-6  Jl. Rw. Jaya No.49, RT.12/RW.6, Rawasari, Kec. Cemp. Putih, Kota Jakarta Pusat, Daerah Khusus Ibukota Jakarta 10570
+Erafone, Address","lat":-6.1862,"lng":106.8266,"method":"CITY_FALLBACK","skor":72,"mtd":"3.6B","target":"5.9B"},{"id":"E408","name":"Erafone Franchise Ruko Sumur Batu","type":"Erafone","city":"Jakarta Pusat","area":"Jakpus","mall":"Ruko Sumur Batu","sl":"Ari Ardiansyah","hp":"6281617936969","addr":"Jl. Sumur Batu Raya, RT.2/RW.2, Sumur Batu, Kec. Kemayoran, Kota Jakarta Pusat, Daerah Khusus Ibukota Jakarta 10640","lat":-6.1862,"lng":106.8266,"method":"CITY_FALLBACK","skor":96,"mtd":"3.0B","target":"2.2B"},{"id":"E414","name":"Erafone Ruko Percetakan Negara","type":"Erafone","city":"Jakarta Pusat","area":"Jakpus","mall":"Ruko Percetakan Negara","sl":"Edy Putra Riansyah","hp":"6287777577135","addr":"Jl Percetakan Negara No 52 D Rt 06 Rw 01. Kelurahan rawasari Kec Cempaka Putih Jakarta Pusat 10570","lat":-6.1862,"lng":106.8266,"method":"CITY_FALLBACK","skor":74,"mtd":"1.2B","target":"3.1B"},{"id":"E663","name":"Erafone Ruko Garuda Kemayoran","type":"Erafone","city":"Jakarta Pusat","area":"Jakpus","mall":"Ruko Garuda Kemayoran","sl":"Citra Lusiana","hp":"6281294480938&087789690029","addr":"Jl Garuda no 57 Rt 001 Rw 005 , Kelurahan Gunung Sahari , Kecamatan Kemayoran , Jakarta Pusat","lat":-6.1862,"lng":106.8266,"method":"CITY_FALLBACK","skor":90,"mtd":"3.7B","target":"6.2B"},{"id":"E732","name":"Erafone Ruko Sabang","type":"Erafone","city":"Jakarta Pusat","area":"Jakpus","mall":"Ruko Sabang","sl":"Roby Hidayat","hp":"6285788706963","addr":"Jl. H. Agus Salim No.48A, RT.2/RW.1, Kb. Sirih, kec menteng Jakpus 10340","lat":-6.1862,"lng":106.8266,"method":"CITY_FALLBACK","skor":86,"mtd":"1.7B","target":"1.9B"},{"id":"M212","name":"Erafone And More Rawasari","type":"Erafone & More","city":"Jakarta Pusat","area":"Jakpus","mall":"Ruko Rawasari","sl":"Adityo A Putra","hp":"6282114003070","addr":"JL. Rawasari Selatan Komp. BPKP No.25, RT 012 / RW.09 Kel Rawasari Kec. Cempaka Putih Jakarta Pusat 10570","lat":-6.1862,"lng":106.8266,"method":"CITY_FALLBACK","skor":92,"mtd":"1.9B","target":"3.1B"},{"id":"F080","name":"Erafone K Mall At Menara Jakarta","type":"Erafone","city":"Jakarta Pusat","area":"Jakpus","mall":"Menara Jakarta","sl":"Rizky Setyadi","hp":"6287872410524","addr":"Jl. H. Benyamin Sueb No.10, Gunung Sahari Selatan, Kemayoran, Jakarta Utara, DKI Jakarta 14410","lat":-6.1862,"lng":106.8266,"method":"CITY_FALLBACK","skor":55,"mtd":"4.8B","target":"6.3B"},{"id":"E027","name":"Erafone Daan Mogot Mall","type":"Erafone","city":"Jakarta Barat","area":"Jakbar","mall":"Daan Mogot","sl":"Asep Mulyana","hp":"6281908120555","addr":"Mall Matahari Daan Mogot Lantai 1 No. 24, Jalan Tampak Siring 1 8 12, RT.8/RW.12, Kalideres, Kec. Kalideres, Kota Jakarta Barat, Daerah Khusus Ibukota Jakarta 11840","lat":-6.16,"lng":106.7523,"method":"EXACT_MALL","skor":74,"mtd":"2.1B","target":"5.0B"},{"id":"E215","name":"Erafone Green Sedayu Mall","type":"Erafone","city":"Jakarta Barat","area":"Jakbar","mall":"Green Sedayu Mall","sl":"Ridwan Rifaldo","hp":"6281513629299","addr":"Mall Green Sedayu Lantai 1 No. FF-01B, Jl. Taman Palem Lestari Blok B13 No. 1 RT 7/RW 8, Cengkareng, Jakarta Barat 11730","lat":-6.1688,"lng":106.763,"method":"CITY_FALLBACK","skor":73,"mtd":"1.6B","target":"3.5B"},{"id":"M068","name":"Erafone And More Kamal Raya","type":"Erafone & More","city":"Jakarta Barat","area":"Jakbar","mall":"Ruko Kamal Raya","sl":"Arif Budiyanto","hp":"6285781551164","addr":"Jl. Kamal Raya No.20, RT.8/RW.9, Cengkareng Bar., Kecamatan Cengkareng, Kota Jakarta Barat, Daerah Khusus Ibukota Jakarta 11730","lat":-6.1688,"lng":106.763,"method":"CITY_FALLBACK","skor":92,"mtd":"2.1B","target":"6.7B"},{"id":"E233","name":"Erafone Ruko Taman Surya Jakba","type":"Erafone","city":"Jakarta Barat","area":"Jakbar","mall":"Ruko Taman Surya","sl":"Yasir","hp":"6285894016838","addr":"Jl. Taman Surya 3 9-15, RT.9/RW.15, Tegal Alur, Kec. Kalideres, Kota Jakarta Barat","lat":-6.1688,"lng":106.763,"method":"CITY_FALLBACK","skor":91,"mtd":"1.1B","target":"5.0B"},{"id":"E312","name":"Erafone Kresek Kosambi","type":"Erafone","city":"Jakarta Barat","area":"Jakbar","mall":"Ruko Kresek Duri Kosambi","sl":"Della Putri Fauza","hp":"6281213148340","addr":"Jl. Kresek II No.8-A, RT.01/RW.12, Duri Kosambi, Kecamatan Cengkareng, Kota Jakarta Barat, Daerah Khusus Ibukota Jakarta 11750","lat":-6.1688,"lng":106.763,"method":"CITY_FALLBACK","skor":84,"mtd":"4.2B","target":"2.4B"},{"id":"E381","name":"Erafone Ruko Peta Barat Jakbar","type":"Erafone","city":"Jakarta Barat","area":"Jakbar","mall":"Ruko Peta Barat","sl":"Jenal Aripin","hp":"6285693674875","addr":"Jl. Peta Barat RT. 01 RW. 07 Kel. Kalideres Kec. Kalideres, Jakarta Barat 11840","lat":-6.1688,"lng":106.763,"method":"CITY_FALLBACK","skor":74,"mtd":"2.1B","target":"6.6B"},{"id":"E453","name":"Erafone Ruko Duri Kosambi","type":"Erafone","city":"Jakarta Barat","area":"Jakbar","mall":"Ruko Duri Kosambi","sl":"Bagas Ajiyanto","hp":"6285156549329","addr":"Jl. Raya Duri Kosambi No 32F, RT 1/ RW 7, Duri Kosambi, Cengkareng, Jakarta Barat 11750","lat":-6.1688,"lng":106.763,"method":"CITY_FALLBACK","skor":94,"mtd":"3.4B","target":"5.3B"},{"id":"E960","name":"Erafone Mb Menceng Raya","type":"Erafone","city":"Jakarta Barat","area":"Jakbar","mall":"Menceng Raya","sl":"Alija Kalifa Akbar","hp":"6281806161216","addr":"JL. Menceng Raya 26-18 RT 12 RW 06, Tegal Alur, Kalideres, Jakarta Barat 11820","lat":-6.1688,"lng":106.763,"method":"CITY_FALLBACK","skor":99,"mtd":"4.4B","target":"2.8B"},{"id":"E992","name":"Erafone 2.5 Kapuk Cengkareng","type":"Erafone","city":"Jakarta Barat","area":"Jakbar","mall":"Rukan Golf Lake Residence","sl":"Habibie Al Ghazali","hp":"62881024737300","addr":"Rukan Paris Golf Lake Residence Blok B No. 29 RT 19 RW 14, Kel. Cengkareng Timur, Kec. Cengkareng, Jakarta Barat 11730","lat":-6.1688,"lng":106.763,"method":"CITY_FALLBACK","skor":52,"mtd":"4.6B","target":"3.7B"},{"id":"G437","name":"Erablue Satu Maret Jakbar","type":"Erablue","city":"Jakarta Barat","area":"Jakbar","mall":"Satu Maret","sl":"Arif Budiyanto","hp":"6285781551164","addr":"Jl. Satu Maret RT 005 RW 002, Kelurahan Pegadungan, Kecamatan Kalideres, Jakarta Barat, 11830","lat":-6.1688,"lng":106.763,"method":"CITY_FALLBACK","skor":54,"mtd":"1.8B","target":"6.7B"},{"id":"G435","name":"Erablue Duri Kosambi Jakbar","type":"Erablue","city":"Jakarta Barat","area":"Jakbar","mall":"Duri Kosambi","sl":"Bagas Ajiyanto","hp":"6285156549329","addr":"JL. Duri Kosambi Raya No. 28 RT 005 RW 001, Kelurahan Duri Kosambi, Kecamatan Cengkareng, Jakarta Barat, DKI Jakarta","lat":-6.1688,"lng":106.763,"method":"CITY_FALLBACK","skor":95,"mtd":"2.3B","target":"5.1B"},{"id":"G586","name":"Erablue Malioboro Kalideres","type":"Erablue","city":"Jakarta Barat","area":"Jakbar","mall":"Malioboro","sl":"Alija Kalifa Akbar","hp":"6281806161216","addr":"Jalan Malioboro F1/ 20-22, RT 006/ RW 06, terletak di Kel/Desa Tegal Alur, Kecamatan Kalideres, Kota Jakarta Barat, Provinsi DKI Jakarta.","lat":-6.1688,"lng":106.763,"method":"CITY_FALLBACK","skor":75,"mtd":"5.0B","target":"5.0B"},{"id":"E875","name":"Erafone Mb Pos Pengumben","type":"Erafone","city":"Jakarta Barat","area":"Jakbar","mall":"Ruko Pos Pengumben","sl":"Hamid Sanusi","hp":"6285771810996","addr":"Barat, Jl. Raya Pos Pengumben No.1, RW.5, Klp. Dua, Kec. Kb. Jeruk, Daerah Khusus Ibukota Jakarta 11550","lat":-6.1688,"lng":106.763,"method":"CITY_FALLBACK","skor":59,"mtd":"2.0B","target":"2.9B"},{"id":"E413","name":"Erafone Ruko Golden Green Kedoya","type":"Erafone","city":"Jakarta Barat","area":"Jakbar","mall":"Ruko Golden Green","sl":"Agung Kurniawan","hp":"6281519440612","addr":"Ruko Golden Green, Jl. Panjang ,Jl Kom. Green Garden No.2, Rt.2/Rw.7, Kedoya Utara, Kec. Kb. Jeruk , Kota Jakarta Barat , DKI Jakarta 11520","lat":-6.1688,"lng":106.763,"method":"CITY_FALLBACK","skor":85,"mtd":"3.3B","target":"5.6B"},{"id":"E465","name":"Erafone Ruko Kebayoran Lama","type":"Erafone","city":"Jakarta Barat","area":"Jakbar","mall":"Ruko Kebayoran Lama","sl":"Ananda Aulia Rohman","hp":"6287877603272","addr":"Jl. Raya Kebayoran Lama No. 17 RT.007 RW.002 Kel. Sukabumi Selatan Kec. Kebon Jeruk, Jakarta Barat 11560","lat":-6.1688,"lng":106.763,"method":"CITY_FALLBACK","skor":77,"mtd":"5.0B","target":"3.7B"},{"id":"E923","name":"Erafone Mb Jalan Panjang","type":"Erafone","city":"Jakarta Barat","area":"Jakbar","mall":"Ruko Jalan Panjang","sl":"Dyna Fitria","hp":"628562000008","addr":"Jl. Panjang No.5E, RW.11, Kb. Jeruk, Kec. Kb. Jeruk, Kota Jakarta Barat, Daerah Khusus Ibukota Jakarta 11530","lat":-6.1688,"lng":106.763,"method":"CITY_FALLBACK","skor":64,"mtd":"5.5B","target":"2.3B"},{"id":"E943","name":"Erafone Mb Taman Ratu","type":"Erafone","city":"Jakarta Barat","area":"Jakbar","mall":"Ruko Greenville","sl":"Heri Putra","hp":"6289693742010","addr":"Jl. Taman Ratu Indah Blk. BB1 No.3, RT.3/RW.11, Kedoya Utara Jl. Surya Wijaya 6-1, Blk. BB1 No.3, Daerah Khusus Ibukota Jakarta 11520","lat":-6.1688,"lng":106.763,"method":"CITY_FALLBACK","skor":81,"mtd":"1.2B","target":"1.8B"},{"id":"E028","name":"Erafone Mal Puri Indah","type":"Erafone","city":"Jakarta Barat","area":"Jakbar","mall":"Mall Puri Indah","sl":"Mukromin","hp":"6287885827979","addr":"Puri Indah Mall Lantai 2, Jl. Puri Agung, RT.1/RW.2, Kembangan Sel., Kec. Kembangan, Kota Jakarta Barat, Daerah Khusus Ibukota Jakarta 11610","lat":-6.1756,"lng":106.731,"method":"EXACT_MALL","skor":57,"mtd":"1.5B","target":"2.4B"},{"id":"E029","name":"Erafone Px Pavilion St Morits","type":"Erafone","city":"Jakarta Barat","area":"Jakbar","mall":"St Moritz","sl":"Feri Tri Prabowo","hp":"6287807011995","addr":"Lippo Mall Puri Lantai 1 No. 71-72, Jl Kembangan, RT.3/RW.2, Kembangan Sel., Kec. Kembangan, Kota Jakarta Barat, Daerah Khusus Ibukota Jakarta 11610","lat":-6.178,"lng":106.718,"method":"ADDR_MALL","skor":93,"mtd":"2.8B","target":"1.8B"},{"id":"E322","name":"Erafone Ruko Meruya","type":"Erafone","city":"Jakarta Barat","area":"Jakbar","mall":"Ruko Meruya","sl":"Adit Sukma Anggara","hp":"6281351451449","addr":"Jl. Meruya Utara No  22 ,RT 18/04 ,Kelurahan Meruya Utara ,Kecamatan Kembangan ,Kota Jakarta Barat","lat":-6.1688,"lng":106.763,"method":"CITY_FALLBACK","skor":74,"mtd":"3.6B","target":"4.1B"},{"id":"E514","name":"Erafone Franchise Ruko Meruya Selatan","type":"Erafone","city":"Jakarta Barat","area":"Jakbar","mall":"Erafone Meruya Selatan","sl":"Fernaldhy Julian Sanusi","hp":"628568622126","addr":"Jl Raya Meruya Selatan No 36B, RT 7 RW 2 Kel.Meruya selatan Kec.Kembangan Jakarta Barat, 11610","lat":-6.1688,"lng":106.763,"method":"CITY_FALLBACK","skor":66,"mtd":"5.4B","target":"6.2B"},{"id":"E679","name":"Erafone Multibrand Joglo Raya","type":"Erafone","city":"Jakarta Barat","area":"Jakbar","mall":"Ruko Joglo  Raya","sl":"Theodorus Eltara I R","hp":"6281617329666","addr":"JL Dokter Suetomo ,kembangan ,jakarta barat","lat":-6.1688,"lng":106.763,"method":"CITY_FALLBACK","skor":50,"mtd":"4.0B","target":"2.1B"},{"id":"E582","name":"Erafone Mb Srengseng","type":"Erafone","city":"Jakarta Barat","area":"Jakbar","mall":"Srengseng","sl":"Andro Noca Jaya Pratama","hp":"6281808592717","addr":"Jl. Srengseng Raya No.1, RT.10/RW.3, Srengseng, Kembangan, Jakarta Barat, Jakarta 11630","lat":-6.1688,"lng":106.763,"method":"CITY_FALLBACK","skor":84,"mtd":"4.3B","target":"5.7B"},{"id":"E942","name":"Erafone Kembangan Utara","type":"Erafone","city":"Jakarta Barat","area":"Jakbar","mall":"Kembangan Utara","sl":"Firman Saputra","hp":"6281563259098","addr":"Jl. Kembangan Utara No. 101A RT 02 RT 08, Kembangan Utara, Kembangan, Jakarta Barat 11610","lat":-6.1688,"lng":106.763,"method":"CITY_FALLBACK","skor":71,"mtd":"1.3B","target":"3.9B"},{"id":"E616","name":"Erafone Meruya Ilir","type":"Erafone","city":"Jakarta Barat","area":"Jakbar","mall":"Meruya Ilir","sl":"Abdel Fickry Lain","hp":"6281112015550","addr":"JL. Meruya Ilir Raya No. 41e, RT 1/RW 5, Kel. Meruya Utara, Kec. Kembangan, Jakarta Barat 11630","lat":-6.1688,"lng":106.763,"method":"CITY_FALLBACK","skor":79,"mtd":"0.8B","target":"5.5B"},{"id":"G417","name":"Erablue Meruya Selatan","type":"Erablue","city":"Jakarta Barat","area":"Jakbar","mall":"Meruya Selatan","sl":"Abdel Fickry Lain","hp":"6281112015550","addr":"Jl. Meruya Udik No. 29 RT.001/RW.002, Meruya Udik, Kebon Jeruk, Jakarta Barat, DKI Jakarta","lat":-6.1688,"lng":106.763,"method":"CITY_FALLBACK","skor":96,"mtd":"2.0B","target":"4.3B"},{"id":"M219","name":"Erafone And More Puri Indah Mall","type":"Erafone & More","city":"Jakarta Barat","area":"Jakbar","mall":"Ruko Kedoya Duri","sl":"Riki Novianto","hp":"628158033046","addr":"Puri Indah Mall 2 Lantai 1, Jl. Puri Agung, RT.1/RW.2, Kembangan Sel., Kec. Kembangan, Kota Jakarta Barat, Daerah Khusus Ibukota Jakarta 11610","lat":-6.1756,"lng":106.731,"method":"ADDR_MALL","skor":61,"mtd":"3.2B","target":"2.1B"},{"id":"G532","name":"Erablue Kampung Kecil","type":"Erablue","city":"Jakarta Barat","area":"Jakbar","mall":"Kampung Kecil Ashirot","sl":"Ananda Aulia Rohman","hp":"6287877603272","addr":"Jl Assirot Kampung Kecil, Rt007  Rw001,  Sukabumi Selatan, Kec Kebon Jeruk, Kota Jakarta Barat, DKI Jakarta 11520","lat":-6.1688,"lng":106.763,"method":"CITY_FALLBACK","skor":90,"mtd":"2.2B","target":"5.0B"},{"id":"E172","name":"Erafone Ruko Kebon Jeruk Binus","type":"Erafone","city":"Jakarta Barat","area":"Jakbar","mall":"Ruko Kebun Jeruk","sl":"Damar Prayoga","hp":"6281519091997","addr":"Jl. Rw. Belong No.35, RT.2/RW.15, Kb. Jeruk, Kec. Palmerah, Kota Jakarta Barat, Daerah Khusus Ibukota Jakarta 11480","lat":-6.1688,"lng":106.763,"method":"CITY_FALLBACK","skor":88,"mtd":"1.7B","target":"3.6B"},{"id":"E593","name":"Erafone Mangga Besar","type":"Erafone","city":"Jakarta Barat","area":"Jakbar","mall":"Ruko Mangga Besar","sl":"Mohamad Iqbal","hp":"6283877921925","addr":"Jl. Raya Mangga Besar No.67A, RW.2, Tangki, Kec. Taman Sari, Kota Jakarta Barat, Daerah Khusus Ibukota Jakarta 11180","lat":-6.1688,"lng":106.763,"method":"CITY_FALLBACK","skor":60,"mtd":"3.3B","target":"5.8B"},{"id":"E508","name":"Erafone Jembatan Lima","type":"Erafone","city":"Jakarta Barat","area":"Jakbar","mall":"Ruko Jembatan Lima","sl":"Adi Hasan Ashari","hp":"628161997001","addr":"Jl. KH. Moh. Mansyur No. 166 B RT.1/RW.9 Tanah Sereal, Kec. Tambora Jakarta Barat, DKI Jakarta Kode Pos 11270","lat":-6.1688,"lng":106.763,"method":"CITY_FALLBACK","skor":83,"mtd":"5.1B","target":"4.8B"},{"id":"E164","name":"Erafone Mal Taman Anggrek","type":"Erafone","city":"Jakarta Barat","area":"Jakbar","mall":"Mall Taman Anggrek","sl":"Huda Pratama","hp":"6285778107109","addr":"Mall Taman Anggrek Lt. 3 No. E05,E06,E07 Jl. Letjen S. Parman St No.28, RT.12/RW.1, Tomang, Grogol petamburan, West Jakarta City, Jakarta 11440","lat":-6.1798,"lng":106.7924,"method":"EXACT_MALL","skor":81,"mtd":"0.9B","target":"6.6B"},{"id":"E158","name":"Erafone Mal Ciputra Jakarta","type":"Erafone","city":"Jakarta Barat","area":"Jakbar","mall":"Mal Ciputra Jakarta","sl":"Syafri","hp":"6287877602555","addr":"Jl. Letjen S. Parman No.38, RT.11/RW.1, Tj. Duren Utara, Kec. Grogol petamburan, Kota Jakarta Barat, Daerah Khusus Ibukota Jakarta 11470","lat":-6.1795,"lng":106.7914,"method":"EXACT_MALL","skor":69,"mtd":"1.9B","target":"2.8B"},{"id":"E991","name":"Erafone 2.5 Kemanggisan Utama Raya","type":"Erafone","city":"Jakarta Barat","area":"Jakbar","mall":"Ruko Kemanggisan","sl":"Rudi Noviansyah","hp":"6281919151192","addr":"Jl. Kemanggisan Utama Raya No.9J 10 6, RT.10/RW.6, Kemanggisan, Kec. Palmerah, Kota Jakarta Barat, Daerah Khusus Ibukota Jakarta 11480","lat":-6.1688,"lng":106.763,"method":"CITY_FALLBACK","skor":86,"mtd":"5.3B","target":"2.0B"},{"id":"E986","name":"Erafone Mb Jembatan Besi","type":"Erafone","city":"Jakarta Barat","area":"Jakbar","mall":"Ruko Jembatan Besi","sl":"Sigit Dwi Anggoro","hp":"6285875091110","addr":"Jl. Jembatan Besi Raya, Jemb. Besi, Kec. Tambora, Kota Jakarta Barat, Daerah Khusus Ibukota Jakarta 11320","lat":-6.1688,"lng":106.763,"method":"CITY_FALLBACK","skor":81,"mtd":"4.6B","target":"6.9B"},{"id":"G519","name":"Erablue Rawa Belong Jakbar","type":"Erablue","city":"Jakarta Barat","area":"Jakbar","mall":"Palmerah","sl":"Rudi Noviansyah","hp":"6281919151192","addr":"Jl. Rawa Belong No.11, Palmerah Jakarta Barat","lat":-6.1688,"lng":106.763,"method":"CITY_FALLBACK","skor":84,"mtd":"4.4B","target":"2.2B"},{"id":"F134","name":"Erafone Mal Ciputra Jakarta 2.5","type":"Erafone","city":"Jakarta Barat","area":"Jakbar","mall":"Mal Ciputra Jakarta","sl":"Levia Suci Hardiyanti","hp":"6282114852216","addr":"Mall Ciputra Lantai UG ,Jl. Letjen S. Parman, RT.11/RW.1, Tj. Duren Utara, Kec. Grogol petamburan, Kota Jakarta Barat, Daerah Khusus Ibukota Jakarta 11470","lat":-6.1795,"lng":106.7914,"method":"EXACT_MALL","skor":80,"mtd":"5.3B","target":"2.4B"},{"id":"X033","name":"Ibox Bintaro Plaza","type":"iBox","city":"Tangerang Selatan","area":"Tangerang","mall":"Bintaro Plaza","sl":"Reza Alya Fadilah","hp":"62895331424713","addr":"Jl. Bintaro Utama III Sektor 3A, Bintaro Jaya - Tangerang Selatan #Lantai1 Blok D.02A","lat":-6.2674,"lng":106.7136,"method":"EXACT_MALL","skor":83,"mtd":"4.9B","target":"3.8B"},{"id":"X034","name":"Ibox - Sdc Serpong","type":"iBox","city":"Tangerang Selatan","area":"Tangerang Selatan","mall":"Sdc Serpong","sl":"Rado Saputra","hp":"6285880482071","addr":"Summarecon Digital Center #GF A11-12, Jl.Boulevard Scientia Garden, Gading Serpong","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":63,"mtd":"5.2B","target":"5.7B"},{"id":"X035","name":"Ibox App Summarecon Mall Serpong","type":"iBox","city":"Tangerang Selatan","area":"Tangerang Selatan","mall":"Summarecon Mall Serpong","sl":"Fadli","hp":"6281586125213","addr":"Jl. Boulevard raya Gading Serpong Pakulonan Barat Kelapa Dua Unit #GF211-212-215","lat":-6.2484,"lng":106.64,"method":"EXACT_MALL","skor":94,"mtd":"1.7B","target":"3.2B"},{"id":"X191","name":"Ibox Paramount Bsd","type":"iBox","city":"Tangerang","area":"Tangerang","mall":"Ruko Paramount","sl":"Farizqi Muhammad","hp":"62895330759410","addr":"Ruko madison Grande J/22 dan J/23 Gading Serpong, kel. Medang Kec. Pagedangan, Kab. Tangerang, Banten, 15810","lat":-6.238,"lng":106.63,"method":"EXACT_MALL","skor":92,"mtd":"3.9B","target":"3.9B"},{"id":"X058","name":"Ibox Tangerang City Mall","type":"iBox","city":"Tangerang","area":"Tangerang","mall":"Tangerang City Mall","sl":"M Taufan Setiawan","hp":"62895639134975","addr":"Unit Ground Floor C0001 Jalan Jend. Sudirman No. 1 Cikokol, RT.001/RW.005, Babakan, Kec. Tangerang, Kota Tangerang, Banten 15117","lat":-6.1798,"lng":106.6316,"method":"EXACT_MALL","skor":83,"mtd":"2.9B","target":"2.9B"},{"id":"X222","name":"Ibox Pamulang","type":"iBox","city":"Tangerang","area":"Tangerang Selatan","mall":"Ruko Pamulang","sl":"Nurul Hidayah","hp":"6289607554092","addr":"Jl. Pamulang Permai Raya No.Blok E 1, RW.2, Pamulang Bar., Kec. Pamulang, Kota Tangerang Selatan, Banten 15417","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":54,"mtd":"2.4B","target":"4.7B"},{"id":"X049","name":"Ibox Cilegon Centre","type":"iBox","city":"Cilegon","area":"Banten","mall":"Cilegon Centre Mall","sl":"Andri Yanuarta","hp":"6287809467332","addr":"Cilegon Center Mall GF-04  jl. Ahmad Yani, Sukmajaya, kec. Jombang, Kota Cilegon, Banten 42416","lat":-6.0019,"lng":106.005,"method":"ADDR_MALL","skor":64,"mtd":"3.6B","target":"1.5B"},{"id":"X064","name":"Ibox Ciputra Citraraya Tangerang","type":"iBox","city":"Tangerang","area":"Tangerang","mall":"Mall Citraraya Tangerang","sl":"Dani Andrean","hp":"6285714898633","addr":"Jalan Citra Raya Boulevard No.01 Ciakar, Mall Citra Raya Lt GF, Tangerang, Banten, 15710","lat":-6.2212,"lng":106.5432,"method":"ADDR_MALL","skor":95,"mtd":"3.8B","target":"2.8B"},{"id":"X072","name":"Ibox Living World Alam Sutra","type":"iBox","city":"Tangerang","area":"Tangerang Selatan","mall":"Living World Alsut","sl":"Ayu Andeka Kartika Sari","hp":"6281315130531","addr":"Living World Alam Sutra Lantai UG 05, Jalan Alam sutra Boulevard No.Kav. 21, Pakulonan, Kec. Serpong Utara, Kota Tangerang Selatan, Banten 15325","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":52,"mtd":"4.8B","target":"1.9B"},{"id":"X142","name":"Ibox Ahmad Yani Serang","type":"iBox","city":"Serang","area":"Banten","mall":"Ruko Ahmad Yani","sl":"Rusli Irawan Adiansah","hp":"6285715863924","addr":"Jl. Jenderal Ahmad Yani Serang No.93, Sumurpecung, Kec. Serang, Kota Serang, Banten 42117","lat":-6.1104,"lng":106.1639,"method":"CITY_FALLBACK","skor":65,"mtd":"2.1B","target":"4.2B"},{"id":"X173","name":"Ibox Mall Alam Sutra","type":"iBox","city":"Tangerang","area":"Banten","mall":"Mall Alam Sutra","sl":"Whinar Aviati","hp":"6289625170980","addr":"Jl. Jalur Sutera Bar. No.Kav. 16, RT.002/RW.003, Panunggangan Tim., Kec. Pinang, Kota Tangerang, Banten 15143, Mall Alam Sutera Lantai GF, No. G-46A","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":84,"mtd":"1.4B","target":"6.6B"},{"id":"X190","name":"Ibox Greenlake","type":"iBox","city":"Tangerang","area":"Tangerang","mall":"Ruko New Castle Greenlake","sl":"Jefri Chandra","hp":"6285219672193","addr":"Rukan New Castle Blok A No. 52 Greenlake City, Kel. Gondrong, Kec. Cipondoh, Tangerang 15147","lat":-6.1667,"lng":106.668,"method":"ADDR_MALL","skor":86,"mtd":"3.5B","target":"2.8B"},{"id":"X168","name":"Ibox App Bxc Change 2","type":"iBox","city":"Tangerang Selatan","area":"Tangerang","mall":"Bintaro X-Change 2","sl":"Abdul Haris","hp":"6285770804338","addr":"Bintaro Jaya Xchange 2, Jl. Lkr. Jaya No.27 Lantai GF-S, Pd. Jaya, Kec. Pd. Aren, Kota Tangerang Selatan , Banten 15220","lat":-6.2698,"lng":106.7162,"method":"ADDR_MALL","skor":80,"mtd":"4.6B","target":"2.5B"},{"id":"X012","name":"Ibox  App Central Park","type":"iBox","city":"Jakarta Barat","area":"Jakbar","mall":"Central Park","sl":"Rydho Malta","hp":"628119716170","addr":"Central Park Mall #L1-124-125, Jl. S. Parman Kav. 28","lat":-6.1779,"lng":106.7908,"method":"EXACT_MALL","skor":56,"mtd":"3.9B","target":"3.4B"},{"id":"X043","name":"Ibox Itc Roxy","type":"iBox","city":"Jakarta Barat","area":"Jakbar","mall":"Itc Roxy Mas","sl":"Cindy Immanuella","hp":"6289628357574","addr":"Jl. K.H. Hasyim Ashari No.125 Jakarta unit : Lt. dasar 10-11","lat":-6.1661,"lng":106.8099,"method":"EXACT_MALL","skor":76,"mtd":"3.0B","target":"5.5B"},{"id":"X055","name":"Ibox Mal Ciputra Jakarta","type":"iBox","city":"Jakarta Barat","area":"Jakbar","mall":"Mal Ciputra Jakarta","sl":"Vincentius Alexander Alim","hp":"6289602616329","addr":"Mall Ciputra Lantai UG 21- 22 Jl. Arteri S Parman Grogol Jakarta-11470","lat":-6.1795,"lng":106.7914,"method":"EXACT_MALL","skor":93,"mtd":"3.9B","target":"5.1B"},{"id":"X011","name":"Ibox  App St Moritz","type":"iBox","city":"Jakarta Barat","area":"Jakbar","mall":"St Moritz","sl":"Joko Satria Gama","hp":"6283891246986","addr":"Lippo Mall Puri Unit No. L1-16, Jl. Puri Indah Raya No.16, BLVRD, Jakarta, Kota Jakarta Barat, Daerah Khusus Ibukota Jakarta 11610","lat":-6.178,"lng":106.718,"method":"ADDR_MALL","skor":53,"mtd":"2.7B","target":"3.4B"},{"id":"X110","name":"Ibox Gajah Mada Mall","type":"iBox","city":"Jakarta Barat","area":"Jakbar","mall":"Mal Gajah Mada Plaza","sl":"Faisal Aziz","hp":"6285889980502","addr":"Jl. Gajah Mada No.19-26. Jakarta 10130 , Mal Gajah mada plaza lantai GF no 13, Kelurahan Petojo utara, Kec Gambir, Provinsi DKI Jakarta, Kota Jakarta Pusat, Kode Pos 10130","lat":-6.1639,"lng":106.8167,"method":"EXACT_MALL","skor":56,"mtd":"2.0B","target":"2.5B"},{"id":"X016","name":"Ibox  Mal Atrium Senen (Ibox Millenum Mall)","type":"iBox","city":"Jakarta Pusat","area":"Jakpus","mall":"Plaza Atrium","sl":"Adhe France Setya","hp":"6287784399859","addr":"Millenium Mall, Ground Floor G-0020 Jl. Senen Raya Blok A No.135 Senen, Jakpus","lat":-6.1862,"lng":106.8266,"method":"CITY_FALLBACK","skor":78,"mtd":"1.5B","target":"2.5B"},{"id":"X014","name":"Ibox Menteng Central","type":"iBox","city":"Jakarta Pusat","area":"Jakpus","mall":"Menteng Central","sl":"Lilis Sahita","hp":"6281513189348","addr":"Jl. HOS. Cokroaminoto No.D11A, D11B, D12  Lt. Dasar  RT.2/RW.5, Menteng, Kec. Menteng, Kota Jakarta Pusat, Daerah Khusus Ibukota Jakarta 10310","lat":-6.1862,"lng":106.8266,"method":"CITY_FALLBACK","skor":79,"mtd":"2.0B","target":"6.6B"},{"id":"X015","name":"Ibox  App Plaza Indonesia","type":"iBox","city":"Jakarta Pusat","area":"Jakpus","mall":"Plaza Indonesia","sl":"Esa Marlis","hp":"628111442717","addr":"Plaza Indonesia 3rd Floor #E006- E006A, Jl. M.H. Thamrin Kav 28-30","lat":-6.193,"lng":106.8213,"method":"EXACT_MALL","skor":78,"mtd":"4.6B","target":"6.2B"},{"id":"X022","name":"Ibox App Senayan City","type":"iBox","city":"Jakarta Pusat","area":"Jakpus","mall":"Senayan City","sl":"Angga Suganda","hp":"6287882973305","addr":"Senayan City Lt. 4 No. 29, Jalan Asia Afrika, RT.1/RW.3, Gelora, Kota Jakarta Pusat, Daerah Khusus Ibukota Jakarta 10270","lat":-6.2235,"lng":106.7992,"method":"EXACT_MALL","skor":56,"mtd":"1.0B","target":"7.0B"},{"id":"X037","name":"Ibox Mangga Dua","type":"iBox","city":"Jakarta Pusat","area":"Jakpus","mall":"Mangga Dua Square","sl":"Ilyas Febrian","hp":"6285780427423","addr":"Mangga Dua Mall 2nd Floor #42, Jl. Mangga Dua Raya","lat":-6.1372,"lng":106.8296,"method":"EXACT_MALL","skor":50,"mtd":"5.4B","target":"6.6B"},{"id":"X172","name":"Ibox Senayan Park","type":"iBox","city":"Jakarta Pusat","area":"Jakpus","mall":"Senayan Park","sl":"Putra Bakti Utama","hp":"6281384476269","addr":"Jl. Gerbang Pemuda No.3, RT.1/RW.3, Gelora, Kecamatan Tanah Abang, Kota Jakarta Pusat, Daerah Khusus Ibukota Jakarta 10270","lat":-6.2185,"lng":106.8017,"method":"EXACT_MALL","skor":65,"mtd":"1.6B","target":"4.2B"},{"id":"X192","name":"Ibox K Mall At Menara Jakarta","type":"iBox","city":"Jakarta Pusat","area":"Jakpus","mall":"Menara Jakarta","sl":"Bayu Anjasrianto","hp":"6281808887520","addr":"Komplek, Jl. Kota Baru Bandar Kemayoran No.C8, Gn. Sahari Sel., Kec. Kemayoran, Kota Jakarta Pusat, Daerah Khusus Ibukota Jakarta 10610","lat":-6.1862,"lng":106.8266,"method":"CITY_FALLBACK","skor":63,"mtd":"4.9B","target":"6.5B"},{"id":"F077","name":"Erafone Bintaro X-Change Ii","type":"Erafone","city":"Tangerang Selatan","area":"Tangerang Selatan","mall":"Bintaro X-Change","sl":"Danyel Shilton Panjaitan","hp":"6281315944189","addr":"Mall Bintaro Xchange 2 Jl. Lkr. Jaya No.12 Pd. Jaya, Kec. Pd. Aren, Kota Tangerang Selatan, Banten 15220","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":60,"mtd":"2.6B","target":"6.9B"},{"id":"E612","name":"Erafone Ruko Jombang Tangsel","type":"Erafone","city":"Tangerang Selatan","area":"Tangerang Selatan","mall":"Ruko Wr Supratman","sl":"Dini Gandini","hp":"6281554727960","addr":"Jl. Jombang Raya No. 5abc, Pd. Aren Kota Tangerang Selatan, Banten 15226","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":66,"mtd":"5.2B","target":"5.8B"},{"id":"E160","name":"Erafone Ruko Ceger Tangerang","type":"Erafone","city":"Tangerang Selatan","area":"Tangerang Selatan","mall":"Ruko Ceger","sl":"Diyanti","hp":"6289615673553","addr":"Jl. Ceger Raya No 99, Ruko No 6-7, Jurang Mangu Barat, Kec. Pd. Aren, Kota Tangerang Selatan, Banten 15222","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":68,"mtd":"2.8B","target":"6.8B"},{"id":"E620","name":"Erafone 2.5 Pajajaran Pamulang","type":"Erafone","city":"Tangerang Selatan","area":"Tangerang Selatan","mall":"Ruko Pamulang","sl":"Heru Bachtiar","hp":"6283811921019","addr":"Jl. Pajajaran No.39, Pamulang Barat Kec. Pamulang Tangerang Selatan","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":85,"mtd":"3.9B","target":"4.2B"},{"id":"G423","name":"Erablue Parung Ciputat","type":"Erablue","city":"Tangerang Selatan","area":"Tangerang Selatan","mall":"Ruko Parung Ciputat","sl":"Heru Bachtiar","hp":"6283811921019","addr":"Jl. Moh. Toha, RT.5/RW.4, Pd. Cabe Udik, Kec. Pamulang, Kota Tangerang Selatan, Banten","lat":-6.31,"lng":106.74,"method":"EXACT_MALL","skor":62,"mtd":"2.2B","target":"6.8B"},{"id":"E299","name":"Erafone Cirendeu Pondok Cabe","type":"Erafone","city":"Tangerang Selatan","area":"Tangerang Selatan","mall":"Ruko Cirendeu","sl":"Iqbal Firdaus","hp":"6285959388797","addr":"Jl. Raya Cirendeu No.1 Kec. Ciputat Timur Kel. Cirendeu Kota Tangerang Selatan Kode Pos 15419","lat":-6.31,"lng":106.74,"method":"ADDR_MALL","skor":87,"mtd":"4.3B","target":"1.8B"},{"id":"G520","name":"Erablue Pahlawan Rempoa","type":"Erablue","city":"Tangerang Selatan","area":"Tangerang Selatan","mall":"Ruko Erablue Rempoa","sl":"Iqbal Firdaus","hp":"6285959388797","addr":"Jl. Pahlawan RT.3/RW.3 kelurahan;Rempoa Kecamatan; Ciputat Timur","lat":-6.31,"lng":106.74,"method":"ADDR_MALL","skor":70,"mtd":"1.1B","target":"4.7B"},{"id":"E321","name":"Erafone Ruko Sudimara Ciputat","type":"Erafone","city":"Tangerang Selatan","area":"Tangerang Selatan","mall":"Ruko Sudimara","sl":"Muhamad Igfir Refi Syarip","hp":"62895395257767","addr":"Jl. Jombang Raya No 21 RT/RW 02/02 Kelurahan Jombang, kecamatan Ciputat, Kota Tangerang Selatan, Banten 15414","lat":-6.31,"lng":106.74,"method":"ADDR_MALL","skor":82,"mtd":"5.1B","target":"4.4B"},{"id":"M027","name":"Erafone And More Ciputat","type":"Erafone & More","city":"Tangerang Selatan","area":"Tangerang Selatan","mall":"Ruko Ciputat","sl":"Mochamad Helmi Alatas","hp":"6285155303034","addr":"Jl. Dewi Sartika No.12 D, Cipayung, Kec. Ciputat, Kota Tangerang Selatan, Banten 15411","lat":-6.31,"lng":106.74,"method":"EXACT_MALL","skor":53,"mtd":"5.3B","target":"1.9B"},{"id":"G403","name":"Erablue Dewi Sartika Ciputat","type":"Erablue","city":"Tangerang Selatan","area":"Tangerang Selatan","mall":"Ruko Dewi Sartika","sl":"Mochamad Helmi Alatas","hp":"6285155303034","addr":"Jl. Dewi Sartika 16-12, Ciputat, Kec. Ciputat, Kota Tangerang Selatan, Banten 15411","lat":-6.31,"lng":106.74,"method":"ADDR_MALL","skor":61,"mtd":"1.1B","target":"1.9B"},{"id":"E704","name":"Erafone Ruko Dewantara Ciputat","type":"Erafone","city":"Tangerang Selatan","area":"Tangerang Selatan","mall":"Ruko Kh Dewantara","sl":"Muhammad Riduan Wahid","hp":"6289603352071","addr":"Jl. Ki Hajar Dewantara No.22, RT.1/RW.3, Ciputat, Kec. Ciputat, Kota Tangerang Selatan, Banten 15411","lat":-6.31,"lng":106.74,"method":"ADDR_MALL","skor":65,"mtd":"2.7B","target":"6.7B"},{"id":"G427","name":"Erablue Cirendeu Tangerang Selatan","type":"Erablue","city":"Tangerang Selatan","area":"Tangerang Selatan","mall":"Ruko Cirendeu","sl":"Muhammad Riduan Wahid","hp":"6289603352071","addr":"Jl. Raya Cirendeu No.25 A, Pisangan, Kec. Ciputat Timur, Kota Tangerang Selatan, Banten 15419","lat":-6.31,"lng":106.74,"method":"ADDR_MALL","skor":86,"mtd":"2.0B","target":"4.8B"},{"id":"E043","name":"Erafone Plaza Bintaro Jaya","type":"Erafone","city":"Tangerang Selatan","area":"Tangerang Selatan","mall":"Bintaro Plaza","sl":"Niko Erdian","hp":"6287771807710","addr":"Plaza Bintaro Jaya Lantai 1 No. 12A Jl. Bintaro Utama Sektor 3-A, Pd. Karya, Pd. Aren, Kota Tangerang Selatan, Banten 15225","lat":-6.2674,"lng":106.7136,"method":"EXACT_MALL","skor":89,"mtd":"1.2B","target":"5.1B"},{"id":"E685","name":"Erafone Mb Pondok Betung","type":"Erafone","city":"Tangerang Selatan","area":"Tangerang Selatan","mall":"Ruko Pondok Betung","sl":"Rizki Tazakka","hp":"6281779941945","addr":"Jl. Ceger Raya No. 22 B , Kel. Pondok karya Kec. Pondok Aren , Kota Tangerang Selatan , Banten 15225","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":86,"mtd":"3.3B","target":"6.6B"},{"id":"G457","name":"Erablue Ceger Raya Tangerang","type":"Erablue","city":"Tangerang Selatan","area":"Tangerang Selatan","mall":"Ruko Ceger","sl":"Rizki Tazakka","hp":"6281779941945","addr":"Jl. Ceger Raya RT 003 RW 001, Jurangmangu Timur, Kec Pondok Aren, Kota Tangerang Selatan, Banten 15419","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":63,"mtd":"3.9B","target":"3.2B"},{"id":"E391","name":"Erafone Ruko Wr Supratman Ciputat","type":"Erafone","city":"Tangerang Selatan","area":"Tangerang Selatan","mall":"Ruko Wr Supratman","sl":"Muhamad Fahmi","hp":"6281385956802","addr":"Jl. WR Supratman No 124 kecamatan. Kecamatan Ciputat Timur. keluraha Cempaka Putih. Banten 15412","lat":-6.31,"lng":106.74,"method":"ADDR_MALL","skor":66,"mtd":"2.7B","target":"5.2B"},{"id":"G463","name":"Erablue Kano Raya Tangerang","type":"Erablue","city":"Tangerang Selatan","area":"Tangerang Selatan","mall":"Serpong","sl":"Andri Sundara","hp":"6281318321003","addr":"Jl. Kano Raya No.2, Klp. Dua, Kec. Klp. Dua, Kabupaten Tangerang, Banten 15810","lat":-6.2484,"lng":106.64,"method":"EXACT_MALL","skor":69,"mtd":"2.9B","target":"6.6B"},{"id":"G431","name":"Erablue Legok Tangerang","type":"Erablue","city":"Tangerang","area":"Kabupaten Tangerang","mall":"Legok","sl":"Rezky Nabila","hp":"6289678086600","addr":"Jln. Raya Dasana Indah Blok SA1 No. 11, Bojong Nangka, Kec. Kelapa Dua Tangerang, Banten 15810","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":54,"mtd":"0.8B","target":"4.9B"},{"id":"E084","name":"Erafone 1 Supermall Karawaci","type":"Erafone","city":"Tangerang","area":"Kabupaten Tangerang","mall":"Supermal Karawaci","sl":"Rama Prasetyo","hp":"6281291059132","addr":"Supermall Karawaci Lantai LG No.3A-6A E-CENTER, Jl. Boulevard Diponegoro No.105, Bencongan, Kec. Klp. Dua, Kota Tangerang, Banten 15811","lat":-6.1756,"lng":106.6219,"method":"EXACT_MALL","skor":86,"mtd":"5.5B","target":"1.9B"},{"id":"M163","name":"Erafone And More Serpong","type":"Erafone & More","city":"Tangerang Selatan","area":"Tangerang Selatan","mall":"Serpong","sl":"Mochammad Ramdan Akbar","hp":"6285894568558","addr":"Jl. MH. Thamrin No.7, Pakualam, Kec. Serpong Utara, Kota Tangerang Selatan, Banten 15143","lat":-6.2484,"lng":106.64,"method":"EXACT_MALL","skor":63,"mtd":"3.2B","target":"2.2B"},{"id":"E777","name":"Erafone Mb Cihuni Pagedangan (Erafone Cihuni Gading Serpong)","type":"Erafone","city":"Tangerang","area":"Kabupaten Tangerang","mall":"Cihuni Pagedangan","sl":"Mulyana","hp":"6287874564560","addr":"ruko North sorrento square No.1 Jl.Ir sukarno cihuni,kec pagedangan,kabupaten Tangerang ,Banten 15332","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":72,"mtd":"4.9B","target":"6.3B"},{"id":"E873","name":"Erafone Mb Legok","type":"Erafone","city":"Tangerang","area":"Kabupaten Tangerang","mall":"Ruko Legok","sl":"Andri Sundara","hp":"6281318321003","addr":"Jln. Raya PLP Curug No. 95 Kec. Legok, Kab. Tangerang Banten 15820","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":73,"mtd":"2.1B","target":"3.9B"},{"id":"E874","name":"Erafone Multibrand Dasana Indah","type":"Erafone","city":"Tangerang","area":"Kabupaten Tangerang","mall":"Ruko Dasana Indah","sl":"Rezky Nabila","hp":"6289678086600","addr":"Jln. Raya Dasana Indah Blok SA1 No. 11, Bojong Nangka, Kec. Kelapa Dua Tangerang, Banten 15810","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":84,"mtd":"4.1B","target":"4.9B"},{"id":"E813","name":"Erafone Multibrand Serpong Garden Cisauk","type":"Erafone","city":"Tangerang","area":"Kabupaten Tangerang","mall":"Cisauk","sl":"Diki Febriyanto","hp":"62895363851554","addr":"Jl. Raya Cisauk Lapan Jl. Ruko Serpong Garden ruko 3 No.21, Cibogo, Kec. Cisauk, Kabupaten Tangerang, Banten 15341","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":91,"mtd":"3.3B","target":"5.2B"},{"id":"M222","name":"Erafone And More Eastvara Mall","type":"Erafone & More","city":"Tangerang","area":"Kabupaten Tangerang","mall":"Pagedangan","sl":"Reno Dharmawan","hp":"6287808367901","addr":"Eastvara Mall, Jl. BSD Boulevard Utara, Cijantra, Kec. Pagedangan, Kabupaten Tangerang, Banten 15854","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":85,"mtd":"2.2B","target":"5.1B"},{"id":"G468","name":"Erablue Legok Karawaci","type":"Erablue","city":"Tangerang","area":"Kabupaten Tangerang","mall":"Legok","sl":"Andri Sundara","hp":"6281318321003","addr":"PH2Q+PCX, Babakan, Legok, Tangerang Regency, Banten 15820","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":58,"mtd":"2.0B","target":"6.4B"},{"id":"E221","name":"Erafone And More Ciputra Citraraya Tangerang","type":"Erafone & More","city":"Tangerang","area":"Tangerang","mall":"Mall Citraraya Tangerang","sl":"Elvirawati","hp":"6287880648402","addr":"Jl. Citra Raya Boulevard No.38 Mall Citra Lt. 2 unit C 19-12, Ciakar, Kec. Panongan, Kabupaten Tangerang, Banten 15710","lat":-6.2212,"lng":106.5432,"method":"ADDR_MALL","skor":97,"mtd":"3.4B","target":"3.0B"},{"id":"F058","name":"Erafone 2.5 Telaga Bestari","type":"Erafone","city":"Tangerang","area":"Tangerang","mall":"Telaga Bestari","sl":"Aditya Anjasmara","hp":"6287778274871","addr":"Jl. Taman Palem Raya No.12, Wana Kerta, kec sindang jaya1, Kabupaten Tangerang, Banten 15560","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":88,"mtd":"1.8B","target":"3.4B"},{"id":"G446","name":"Erablue Cikupa Peusar","type":"Erablue","city":"Tangerang","area":"Tangerang","mall":"Cikupa","sl":"Mochamad Ryan Krisdiana","hp":"6282124749133","addr":"Sukamulya, Cikupa, Tangerang Regency, Banten 15710","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":93,"mtd":"3.8B","target":"3.0B"},{"id":"M167","name":"Erafone And More Teluk Naga","type":"Erafone & More","city":"Tangerang","area":"Tangerang","mall":"Teluk Naga","sl":"Jatonggo Silitonga","hp":"6285782286690","addr":"Kampung Melayu Barat RT 01/RW 02 No. II-C, Kp. Melayu Barat, Kec. Teluknaga, Tangerang Kabupaten, Banten 15510","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":81,"mtd":"2.0B","target":"6.5B"},{"id":"E627","name":"Erafone Ruko Cisoka","type":"Erafone","city":"Tangerang","area":"Tangerang","mall":"Cisoka","sl":"Fahrul Yanuar","hp":"628985500577","addr":"Jl. Raya Cisoka Adiyasa No .35-36 Rt 001/Rw/001 Kp Lukun Sukatani ,Kec Cisoka Kabupaten Tangerang Banten","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":53,"mtd":"1.2B","target":"3.8B"},{"id":"G451","name":"Erablue Cisoka Tigaraksa Tangerang","type":"Erablue","city":"Tangerang","area":"Tangerang","mall":"Cisoka","sl":"Fahrul Yanuar","hp":"628985500577","addr":"Cisoka, Tangerang Regency, Banten 15730","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":67,"mtd":"1.0B","target":"3.3B"},{"id":"E253","name":"Erafone Ruko Curug Tangerang","type":"Erafone","city":"Tangerang","area":"Tangerang","mall":"Ruko Curug","sl":"Teguh Prakoso","hp":"6281287162443","addr":"Jl. Raya PLP Curug No.16, Suka Bakti, Kec. Curug, Tangerang, Banten 15810","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":58,"mtd":"3.8B","target":"2.9B"},{"id":"G447","name":"Erablue Curug Raya Tangerang","type":"Erablue","city":"Tangerang","area":"Tangerang","mall":"Curug","sl":"Teguh Prakoso","hp":"6281287162443","addr":"Jl. Raya PLP Curug No.16, Suka Bakti, Kec. Curug, Tangerang, Banten 15810","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":97,"mtd":"2.9B","target":"5.4B"},{"id":"E787","name":"Erafone Mb Tigaraksa","type":"Erafone","city":"Tangerang","area":"Tangerang","mall":"Tigaraksa","sl":"Nana Pratama","hp":"6285711100857","addr":"JL. Syeh Mubarok Matagara No.9 RT 001/004, TIGARAKSA TANGERANG Banten 15720","lat":-6.295,"lng":106.485,"method":"EXACT_MALL","skor":85,"mtd":"0.8B","target":"1.9B"},{"id":"G453","name":"Erablue Syeh Mubarok Tangerang","type":"Erablue","city":"Tangerang","area":"Tangerang","mall":"Tigaraksa","sl":"Nana Pratama","hp":"6285711100857","addr":"Jl. Syeh Mubarok No.10, Tigaraksa, Kec. Tigaraksa, Kabupaten Tangerang, Banten 15720","lat":-6.295,"lng":106.485,"method":"EXACT_MALL","skor":94,"mtd":"5.0B","target":"4.5B"},{"id":"E848","name":"Erafone Pasar Kemis","type":"Erafone","city":"Tangerang","area":"Tangerang","mall":"Pasar Kemis","sl":"Irfan Supiandi","hp":"6281276004200","addr":"JL.Taman Sukamatri Raya A/12 Kel Sukamatri Kec. Pasar Kemis Kab.Tangerang 15560 Banten","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":73,"mtd":"3.5B","target":"2.3B"},{"id":"E695","name":"Erafone Multibrand Binong","type":"Erafone","city":"Tangerang","area":"Tangerang","mall":"Binong","sl":"Teguh Prakoso","hp":"6281287162443","addr":"Jl. Raya Binong No 45 , Kec .Curug, Kabupaten Tangerang Banten","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":58,"mtd":"1.0B","target":"3.5B"},{"id":"E812","name":"Erafone Ruko Kutabumi","type":"Erafone","city":"Tangerang","area":"Tangerang","mall":"Kutabumi","sl":"Edi Suryadi","hp":"6285959594176","addr":"Jl. Raya Regency II Kel. Kuta Jaya Kec. Ps. Kemis Kab. Tangerang 15560","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":52,"mtd":"5.0B","target":"2.7B"},{"id":"G420","name":"Erablue Kutabumi Tangerang","type":"Erablue","city":"Tangerang","area":"Tangerang","mall":"Kutabumi","sl":"Misbahul Badri","hp":"6281283260410","addr":"Jl. Raya Curug Parigi, Suka Bakti, Kec. Curug, Kabupaten Tangerang, Banten 15810","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":65,"mtd":"3.9B","target":"3.4B"},{"id":"E201","name":"Erafone Ruko Kresek Balaraja","type":"Erafone","city":"Tangerang","area":"Tangerang","mall":"Ruko Balaraja","sl":"Dede Dermawan","hp":"6285285954784","addr":"Jl. Raya Kresek, Saga, Kec. Balaraja, Tangerang, Banten 15610","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":85,"mtd":"5.0B","target":"3.7B"},{"id":"G467","name":"Erablue Kresek Balaraja","type":"Erablue","city":"Tangerang","area":"Tangerang","mall":"Ruko Balaraja","sl":"Dede Dermawan","hp":"6285285954784","addr":"Jl. Raya Kresek No.69, Saga, Kec. Balaraja, Kabupaten Tangerang, Banten 15610","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":89,"mtd":"4.3B","target":"6.6B"},{"id":"E744","name":"Erafone Ruko Rajeg Tangerang","type":"Erafone","city":"Tangerang","area":"Tangerang","mall":"Ruko Rajeg Tangerang","sl":"Misbahul Badri","hp":"6281283260410","addr":"Jl. Raya Ps. Kemis, Mekarsari Kel. Mekarsari Kec. Rajeg Kab. Tangerang Banten 15540.","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":65,"mtd":"4.9B","target":"6.9B"},{"id":"G464","name":"Erablue Mauk Tangerang","type":"Erablue","city":"Tangerang","area":"Tangerang","mall":"Sepatan","sl":"Edi Suryadi","hp":"6285959594176","addr":"Ruko Permata Icon, Jl. Raya Cadas - Kukun No. 6, Karet, Kec. Sepatan, Kabupaten Tangerang, banten 15520","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":61,"mtd":"4.9B","target":"1.6B"},{"id":"F066","name":"Erafone 2.5 Sepatan","type":"Erafone","city":"Tangerang","area":"Tangerang","mall":"Sepatan","sl":"Ade Rizky Pajarian","hp":"6281574755707","addr":"Jl. Raya Mauk Jl. Tangerang Golden City No.3","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":97,"mtd":"5.1B","target":"5.8B"},{"id":"G478","name":"Erablue Pasar Kemis Tangerang","type":"Erablue","city":"Tangerang Kabupaten","area":"Kabupaten Tangerang","mall":"Pasar Kemis","sl":"Irfan Supiandi","hp":"6281276004200","addr":"JL.Kp Pasar Kemis RT 02/03 Kel Pasar Kemis,Kec Pasar Kemis,Kab Tangerang ,Provinsi Banten kode POS 15560","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":76,"mtd":"4.6B","target":"6.3B"},{"id":"G489","name":"Erablue Kampung Melayu Tangerang","type":"Erablue","city":"Kabupaten Tangerang","area":"Kabupaten Tangerang","mall":"","sl":"Jatonggo Silitonga","hp":"6285782286690","addr":"Jalan Kampung Melayu Barat, RT. 002, RW.002, terletak di Kel/Desa Kampung Melayu Barat, Kecamatan Teluk Naga, Kabupaten Tangerang, Provinsi Banten","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":65,"mtd":"2.1B","target":"5.8B"},{"id":"F079","name":"Erafone 2.5 Grand Batavia","type":"Erafone","city":"Kabupaten Tangerang","area":"Kabupaten Tangerang","mall":"","sl":"Oktavian Nurrahmat","hp":"6285932222992","addr":"Jalan Raya Grand Batavia RT02/RW019 Kel.Sindangsari Kec.Pasar Kemis Kab.Tangerang,Banten 15560","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":56,"mtd":"2.6B","target":"1.7B"},{"id":"G494","name":"Erablue Kronjo Tangerang","type":"Erablue","city":"Kabupaten Tangerang","area":"Kabupaten Tangerang","mall":"","sl":"Aditya Anjasmara","hp":"6287778274871","addr":"Jalan Raya Kronjo, RT 002, RW 001, Ds. Kronjo, Kec. Kronjo, Kab. Tangerang Banten 15550","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":80,"mtd":"1.8B","target":"6.0B"},{"id":"G497","name":"Erablue Kresek Sukamulya","type":"Erablue","city":"Kabupaten Tangerang","area":"Kabupaten Tangerang","mall":"Ceplak","sl":"Dede Dermawan","hp":"6285285954784","addr":"Jl. raya kresek No 118 Rt 001, rw 001 Desa Sukamulya kecamatan sukamulya, Kabupateng tangerang Banten 15612","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":79,"mtd":"2.4B","target":"6.0B"},{"id":"G505","name":"Erablue Mauk Jatiwaringin","type":"Erablue","city":"Tangerang","area":"Tangerang","mall":"Jatiwaringin Mauk","sl":"Ade Rizky Pajarian","hp":"6281574755707","addr":"Jl. Jatiwaringin kec,Mauk Kabupaten Tangerang Banten 15536","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":64,"mtd":"1.8B","target":"5.1B"},{"id":"G569","name":"Erablue Mauk Sukamanah","type":"Erablue","city":"Tangerang","area":"Kabupaten Tangerang","mall":"Rajek","sl":"Oktavian Nurrahmat","hp":"6285932222992","addr":"Jalan Raya Rajeg Tanjakan No.23 ,sukamanah,Kec.Rajeg,Kab.Tangerang,Banten 15540","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":75,"mtd":"2.3B","target":"6.3B"},{"id":"E231","name":"Erafone Ruko Cokroaminoto Ciledug","type":"Erafone","city":"Tangerang","area":"Tangerang","mall":"Ruko Cokroaminoto","sl":"Muhammad Dendy","hp":"6281281736135","addr":"Jln. HOS Cokroaminoto No. 29 RT. 002 RW. 004, Karang Timur, Karang Tengah, Ciledug, Tangerang","lat":-6.2197,"lng":106.7319,"method":"ADDR_MALL","skor":99,"mtd":"2.1B","target":"5.0B"},{"id":"G402","name":"Erablue Hos Cokroaminoto","type":"Erablue","city":"Tangerang","area":"Tangerang","mall":"Hos Cokroaminoto Ciledug","sl":"Muhammad Dendy","hp":"6281281736135","addr":"Jl. HOS Cokroaminoto No.09, RT.001/RW.003 Kel, Sudimara Tim., Kec. Ciledug, Kota Tangerang, Banten 15141","lat":-6.2197,"lng":106.7319,"method":"EXACT_MALL","skor":75,"mtd":"4.0B","target":"6.1B"},{"id":"F003","name":"Erafone Ciledug 2.5 Raya","type":"Erafone","city":"Tangerang","area":"Tangerang","mall":"Ruko Hasyim Ashari","sl":"Mahfudin","hp":"62816652158","addr":"Jl Ciledug Raya No 9 RT/RW 001/009, Larangan Indah, Kec Larangan, Kota Tangerang Banten 15154","lat":-6.2197,"lng":106.7319,"method":"ADDR_MALL","skor":71,"mtd":"5.2B","target":"2.1B"},{"id":"G546","name":"Erablue Ciledug Raya Tangerang","type":"Erablue","city":"Tangerang Selatan","area":"Tangerang","mall":"Ruko Ciledug","sl":"Mahfudin","hp":"62816652158","addr":"Jl. Ciledug Raya No. 30 RT.006/RW.002, Petukangan Utara, Kec. Pesanggrahan, Kota Tangerang, Banten 15156","lat":-6.2197,"lng":106.7319,"method":"EXACT_MALL","skor":66,"mtd":"1.6B","target":"6.8B"},{"id":"G416","name":"Erablue Raden Fatah Ciledug","type":"Erablue","city":"Tangerang Selatan","area":"Tangerang","mall":"Ruko Raden Fatah","sl":"Cukat Yoga Aditya","hp":"6289526719552","addr":"Jl. Raden Fatah, RT.001/RW.006, Parung Serab, Kec.Ciledug, Kota Tangerang, Banten 15153","lat":-6.2197,"lng":106.7319,"method":"ADDR_MALL","skor":66,"mtd":"1.0B","target":"4.8B"},{"id":"E290","name":"Erafone Franchise Ruko Poris","type":"Erafone","city":"Tangerang","area":"Tangerang","mall":"Poris Gaga","sl":"Hasril Oktama","hp":"628976118817","addr":"Jalan Poris indah Raya, Ruko Paradise Eksklusif. Poris Gaga Batu Ceper Tangerang","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":72,"mtd":"4.2B","target":"3.2B"},{"id":"G401","name":"Erablue Raden Saleh Ciledug","type":"Erablue","city":"Tangerang Selatan","area":"Tangerang","mall":"Ruko Ciledug","sl":"Hasril Oktama","hp":"628976118817","addr":"Jl. Raden Saleh 15 RT. 001 RW. 01 Kel. Karang Tengah Kec. Karang Tengah, Kota Tangerang","lat":-6.2197,"lng":106.7319,"method":"EXACT_MALL","skor":88,"mtd":"5.4B","target":"2.1B"},{"id":"E646","name":"Erafone Batu Ceper","type":"Erafone","city":"Tangerang","area":"Tangerang","mall":"Batu Ceper","sl":"Saiful Zuhdi","hp":"6281284458691","addr":"Jl. Halim Perdana Kusuma, RT.002/RW.001, Jurumudi Baru, Kec. Batuceper, Kota Tangerang, Banten 15122","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":86,"mtd":"1.7B","target":"1.7B"},{"id":"G487","name":"Erablue Maulana Hasanudin Tangerang","type":"Erablue","city":"Tangerang","area":"Tangerang","mall":"Cipondoh Makmur","sl":"Saiful Zuhdi","hp":"6281284458691","addr":"Jl. Cipondoh makmur kec. cipondoh kota tangerang Banten","lat":-6.1667,"lng":106.668,"method":"EXACT_MALL","skor":77,"mtd":"0.8B","target":"6.6B"},{"id":"E150","name":"Erafone Cilegon Center Mall","type":"Erafone","city":"Cilegon","area":"Banten","mall":"Cilegon Centre Mall","sl":"Arif Abdurahman Aziz","hp":"6281287922331","addr":"Cilegon Center Mall Lt 1 No. 14 , Jl. Ahmad Yani No. 11 Sukmajaya, Kec. Jombang, Kota Cilegon, Banten 42416","lat":-6.0019,"lng":106.005,"method":"ADDR_MALL","skor":84,"mtd":"4.0B","target":"6.7B"},{"id":"E081","name":"Erafone Mall Of Serang","type":"Erafone","city":"Serang","area":"Banten","mall":"Mall Serang","sl":"Andi Saputra","hp":"6287875027979","addr":"Mall of Serang Lantai 1 No. 20, Jl. Akses Tol Serang Tim., Panancangan, Kec. Cipocok Jaya, Kota Serang, Banten 42124","lat":-6.1186,"lng":106.1523,"method":"EXACT_MALL","skor":97,"mtd":"4.0B","target":"3.5B"},{"id":"E209","name":"Erafone Ruko Ahmad Yani Serang","type":"Erafone","city":"Serang","area":"Banten","mall":"Ruko Ahmad Yani","sl":"Depih Harlan","hp":"6283866359264","addr":"Jl. Jendral Ahmad Yani No.104 RT RW 001/002 Sumurpecung, Kec. Serang, Kota Serang, Banten 42117","lat":-6.1104,"lng":106.1639,"method":"CITY_FALLBACK","skor":54,"mtd":"5.3B","target":"6.6B"},{"id":"E194","name":"Erafone Ruko Rangkasbitung","type":"Erafone","city":"Rangkasbitung","area":"Banten","mall":"Ruko Rangkabitung","sl":"Fardan Ega Pirmansyah","hp":"6285694929109","addr":"Ruko Multatuli Rangkas Bitung, Jl. Multatuli No.95, Muara Ciujung Bar., Kec. Rangkasbitung, Kabupaten Lebak, Banten 42312","lat":-6.3559,"lng":106.2512,"method":"ADDR_MALL","skor":89,"mtd":"2.3B","target":"6.2B"},{"id":"E308","name":"Erafone Ruko Mayor Safei Serang","type":"Erafone","city":"Serang","area":"Banten","mall":"Ruko Mayor Safei","sl":"Wita Gita Widianti","hp":"6287786221611","addr":"Jalan Mayor Safei Serang , Kel Lontarbaru , Kec Serang , Kota Serang Banten Kode POS 42115","lat":-6.1104,"lng":106.1639,"method":"CITY_FALLBACK","skor":96,"mtd":"5.0B","target":"4.3B"},{"id":"E320","name":"Erafone Ruko Pandeglang Banten","type":"Erafone","city":"Pandeglang","area":"Banten","mall":"Ruko Pandeglang Banten","sl":"Tb.Hanifan","hp":"6285921222664","addr":"Jl. Serang Pandeglang, Kel. Pandeglang Kec. Pandeglang, Kab. Pandeglang, Banten kode Pos 42211","lat":-6.3085,"lng":106.106,"method":"EXACT_MALL","skor":92,"mtd":"2.7B","target":"3.7B"},{"id":"E589","name":"Erafone Ruko Panimbang Pandeglang","type":"Erafone","city":"Pandeglang","area":"Banten","mall":"Ruko Panimbang","sl":"Ahmad Hidayatulloh","hp":"6285778211772","addr":"JL. Raya Tanjung - Panimbang, Kp. Padahayu RT 01/04 Ds. Panimbang jaya, Kec. Panimbang Kab.  Pandeglang 42281","lat":-6.2982,"lng":106.1063,"method":"CITY_FALLBACK","skor":68,"mtd":"3.4B","target":"2.6B"},{"id":"E499","name":"Erafone Labuan Pandeglang","type":"Erafone","city":"Pandeglang","area":"Banten","mall":"Ruko Labuan","sl":"Arby Rabiul Tsani","hp":"6287778810806","addr":"Jl. Jend. Sudirman No. 99, Muncang Labuan, Kec. Labuang, Pandeglang, Banten 42264","lat":-6.2982,"lng":106.1063,"method":"CITY_FALLBACK","skor":92,"mtd":"5.2B","target":"5.2B"},{"id":"E544","name":"Erafone Ruko Multibrand Cilegon","type":"Erafone","city":"Cilegon","area":"Banten","mall":"Ruko Cilegon","sl":"Ahmad Khusnul","hp":"62895336274142","addr":"Jl. Simpang Tiga No.13 RT.06 RW.01 Kel. Ramanuju Kec. Purwakarta Cilegon, Banten 42411","lat":-5.9869,"lng":106.0284,"method":"CITY_FALLBACK","skor":61,"mtd":"3.7B","target":"3.2B"},{"id":"E821","name":"Erafone Mb Anyer","type":"Erafone","city":"Serang","area":"Banten","mall":"Ruko Anyer","sl":"Ali Rohman","hp":"6282249001138","addr":"Jalan Raya Anyer Sirih Kec Anyer Kabupaten Serang Banten 42166","lat":-6.1104,"lng":106.1639,"method":"CITY_FALLBACK","skor":85,"mtd":"4.7B","target":"3.2B"},{"id":"E822","name":"Erafone Mb Kragilan","type":"Erafone","city":"Serang","area":"Banten","mall":"Ruko Kragilan","sl":"Marvel Ficky Watuseke","hp":"6281514421196","addr":"Jalan raya serang- KM 15, Kragilan, kec Kragilan,Kab Serang BANTEN 42184","lat":-6.1104,"lng":106.1639,"method":"CITY_FALLBACK","skor":63,"mtd":"2.8B","target":"4.7B"},{"id":"E833","name":"Erafone Rangkasbitung 2","type":"Erafone","city":"Rangkasbitung","area":"Banten","mall":"Ruko Rangkabitung","sl":"M Dede Nurjeli","hp":"6285894631045","addr":"JL. Sunan kalijaga No.325 Kp. Papanggo RT.01 RW.02 Kel. Cijoro Pasir Rangkasbitung","lat":-6.3559,"lng":106.2512,"method":"ADDR_MALL","skor":91,"mtd":"2.3B","target":"3.9B"},{"id":"E879","name":"Erafone Mb Cipare","type":"Erafone","city":"Serang","area":"Banten","mall":"Ruko Cipare","sl":"Hendro Wijaya","hp":"6281906450517","addr":"JL. Raya Pandeglang Sempu, Banten Girang RT.001 RW.017 Kel. Cipare Kec. Serang Kota Serang Banten","lat":-6.1104,"lng":106.1639,"method":"CITY_FALLBACK","skor":93,"mtd":"1.8B","target":"4.1B"},{"id":"E191","name":"Erafone Ruko Surya Kencana Pamulang","type":"Erafone","city":"Tangerang Selatan","area":"Tangerang Selatan","mall":"Ruko Sk Pamulang","sl":"Muhammad Sidik","hp":"6285770795112","addr":"Jl. Surya Kencana No.60, Pamulang Bar., Kec. Pamulang, Kota Tangerang Selatan, Banten 15417","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":97,"mtd":"1.6B","target":"2.0B"},{"id":"G405","name":"Erablue Siliwangi Pamulang","type":"Erablue","city":"Tangerang Selatan","area":"Tangerang Selatan","mall":"Siliwangi Pamulang","sl":"Muhammad Sidik","hp":"6285770795112","addr":"Jl. Siliwangi, Pamulang Bar., Kec. Pamulang, Kota Tangerang Selatan, Banten 15417","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":82,"mtd":"3.9B","target":"4.9B"},{"id":"G443","name":"Erablue Setia Budi Pamulang","type":"Erablue","city":"Tangerang Selatan","area":"Tangerang Selatan","mall":"Setia Budi Pamulang","sl":"Samsuri","hp":"6282213538214","addr":"Jl. Raya Setia Budi RT 001/ 001 Kel. Pamulang Timur, Kec. Pamulang, Kota Tangerang Selatan, Banten","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":55,"mtd":"4.6B","target":"5.6B"},{"id":"F022","name":"Erafone 2.5 Pamulang","type":"Erafone","city":"Tangerang Selatan","area":"Tangerang Selatan","mall":"Ruko Pamulang","sl":"Untung","hp":"6287777192252","addr":"Jalan siliwangi no. 2 pondok benda, kec. Pamulang, Banten 15417","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":93,"mtd":"2.3B","target":"5.9B"},{"id":"E484","name":"Erafone Serpong Paradise Walk","type":"Erafone","city":"Tangerang Selatan","area":"Tangerang Selatan","mall":"Paradise Walk Serpong","sl":"Angga Ardian","hp":"6289608218065","addr":"Jalan Graha Raya Boulevard, Paku Jaya, Serpong Utara, Kota Tangerang Selatan, Banten 15220","lat":-6.22,"lng":106.65,"method":"ADDR_MALL","skor":59,"mtd":"0.9B","target":"2.8B"},{"id":"G445","name":"Erablue Puspitek Serpong","type":"Erablue","city":"Tangerang Selatan","area":"Tangerang Selatan","mall":"Ruko Puspitek Serpong","sl":"Angga Ardian","hp":"6289608218065","addr":"JL. Raya Puspitek No. 99, RT 001, RW 002, Kelurahan Buaran, Kecamatan Serpong, Kota Tangerang Selatan, Provinsi Banten","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":80,"mtd":"3.7B","target":"5.7B"},{"id":"E705","name":"Erafone Ruko Ciater Raya Serpong","type":"Erafone","city":"Tangerang Selatan","area":"Tangerang Selatan","mall":"Ciater Raya","sl":"Maryamah","hp":"6285891079090","addr":"Jl. Ciater Raya No.99, Ciater, Kec. Serpong, Kota Tangerang Selatan, 15310","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":79,"mtd":"2.7B","target":"5.0B"},{"id":"E087","name":"Erafone Itc Bsd","type":"Erafone","city":"Tangerang","area":"Tangerang Selatan","mall":"Itc Bsd","sl":"Aan","hp":"6281990000098","addr":"BSD City, ITC BSD Lantai 3 D3A-6, Jl. Pahlawan Seribu, Lengkong Wetan, Tangerang, Kota Tangerang Selatan, Banten 15321","lat":-6.2998,"lng":106.6538,"method":"EXACT_MALL","skor":62,"mtd":"4.2B","target":"3.6B"},{"id":"E941","name":"Erafone Mb Raya Serpong","type":"Erafone","city":"Tangerang Selatan","area":"Tangerang","mall":"Ruko Serpong Raya","sl":"Ari Firdaus Saputra","hp":"6285718574849","addr":"Jalan Benda Permai Raya B8/8-B8/9, RT 001, RW 010,Kel/Desa Pondok Benda, Kecamatan Pamulang, Kota Tangerang Selatan, Provinsi Banten","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":75,"mtd":"1.9B","target":"5.1B"},{"id":"G404","name":"Erablue Rawa Buntu Serpong","type":"Erablue","city":"Tangerang Selatan","area":"Tangerang Selatan","mall":"Ruko Rawa Buntu","sl":"Ari Firdaus Saputra","hp":"6285718574849","addr":"Jalan Benda Permai Raya B8/8-B8/9, RT 001, RW 010,Kel/Desa Pondok Benda, Kecamatan Pamulang, Kota Tangerang Selatan, Provinsi Banten","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":50,"mtd":"5.0B","target":"6.2B"},{"id":"E586","name":"Erafone Ruko Graha Raya","type":"Erafone","city":"Tangerang Selatan","area":"Tangerang Selatan","mall":"Ruko Graha Raya","sl":"A Rahman","hp":"62895326032806","addr":"Jl. Boulevard Graha Raya NO.B15, Paku Jaya, Kec. Serpong Utara, Kota Tangerang Selatan, Banten 15220","lat":-6.22,"lng":106.65,"method":"EXACT_MALL","skor":56,"mtd":"4.5B","target":"2.7B"},{"id":"E834","name":"Erafone Kedaung Tangsel","type":"Erafone","city":"Tangerang Selatan","area":"Tangerang","mall":"Ruko Kedaung","sl":"Samsuri","hp":"6282213538214","addr":"Jl. Pondok Cabe Raya No.9, Kec. Pamulang, Kota Tangerang Selatan, Banten 15418","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":94,"mtd":"3.2B","target":"1.8B"},{"id":"E082","name":"Erafone Living World Alam Sutera","type":"Erafone","city":"Tangerang","area":"Tangerang Selatan","mall":"Living World Alsut","sl":"Indra Setiawan","hp":"6281519578723","addr":"Living World Alam Sutera 1st floor No.30B Jalan Alam Sutera Boulevard Kav. 21, Pakulonan, Kec. Serpong Utara, Kota Tangerang Selatan, Banten 15325","lat":-6.2278,"lng":106.6545,"method":"ADDR_MALL","skor":65,"mtd":"5.1B","target":"2.2B"},{"id":"E088","name":"Erafone Aeon Mal Bsd City","type":"Erafone","city":"Tangerang","area":"Kabupaten Tangerang","mall":"Aeon Bsd","sl":"Gina Tania","hp":"6285880148262","addr":"AEON Mal BSD City Lantai 3 LOT 3-15 Jl. Grand Boulevard BSD City Pagedangan, Kec. Pagedangan, Tangerang, Banten 15345","lat":-6.3024,"lng":106.652,"method":"ADDR_MALL","skor":58,"mtd":"4.6B","target":"5.2B"},{"id":"G480","name":"Erablue Benda Permai Pamulang","type":"Erablue","city":"Tangerang","area":"Tangerang Selatan","mall":"Benda Raya Pamulang","sl":"Untung","hp":"6287777192252","addr":"Jalan siliwangi no. 2 pondok benda, kec. Pamulang, Banten 15417","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":85,"mtd":"3.6B","target":"6.7B"},{"id":"E119","name":"Erafone Tangerang City Mall","type":"Erafone","city":"Tangerang","area":"Tangerang","mall":"Tangerang City Mall","sl":"Muammar Alfis","hp":"6281212400080","addr":"Tangerang City Mall Lantai LG, Jl. Jenderal Sudirman No.1, RT.001/RW.005, Babakan, Kec. Tangerang, Kota Tangerang, Banten 15117","lat":-6.1798,"lng":106.6316,"method":"EXACT_MALL","skor":78,"mtd":"3.7B","target":"5.5B"},{"id":"E696","name":"Erafone Mb Rasuna Said","type":"Erafone","city":"Tangerang","area":"Tangerang","mall":"Rasuna Said","sl":"Muhamad Riyanto","hp":"6283806490002&08179617177","addr":"Jalan boulevard gading Serpong kelapa dua Tangerang Lt GF no 22","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":82,"mtd":"2.8B","target":"6.5B"},{"id":"G458","name":"Erablue Kh Hasyim Ashari Tangerang","type":"Erablue","city":"Tangerang Selatan","area":"Tangerang","mall":"Ruko Hasyim Ashari","sl":"Muhamad Riyanto","hp":"6283806490002&08179617177","addr":"L. KH Hasyim Ashari, RT 05, RW 001 Kelurahan Pinang, Kecamatan Pinang","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":78,"mtd":"5.0B","target":"5.6B"},{"id":"E422","name":"Erafone Ruko M Toha Tangerang","type":"Erafone","city":"Tangerang","area":"Tangerang","mall":"Ruko M Toha Tangerang","sl":"Michael Roma Nelson","hp":"6281212456692","addr":"Jl. Moh. Toha. RT 001/Rw.008 Pabuaran Tumpeng, Kec Karawaci, Kota Tangerang, 15114","lat":-6.1756,"lng":106.6219,"method":"ADDR_MALL","skor":80,"mtd":"2.9B","target":"5.6B"},{"id":"G444","name":"Erablue Moh. Toha Tangerang","type":"Erablue","city":"Tangerang","area":"Tangerang","mall":"M Toha","sl":"Michael Roma Nelson","hp":"6281212456692","addr":"JI, Jl. Moh. Toha Kp. Sangiang, RT.005/RW.001, terletak di, Kec. Periuk, Kota Tangerang, Banten 15132","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":90,"mtd":"2.1B","target":"5.8B"},{"id":"E369","name":"Erafone Franchise Ruko Borobudur Raya","type":"Erafone","city":"Tangerang","area":"Tangerang","mall":"Ruko Borobudur","sl":"Ramdani Andika Pramandana","hp":"6282221833394","addr":"Jl. Borobudur Raya Kel, Cibodas Baru, Kec.Cibodas Kota Tangerang","lat":-6.1571,"lng":106.5975,"method":"ADDR_MALL","skor":81,"mtd":"3.7B","target":"3.0B"},{"id":"E684","name":"Erafone Ruko Sangiang Tangerang","type":"Erafone","city":"Tangerang","area":"Tangerang","mall":"Sangiang","sl":"Denny Sanjaya","hp":"6287880208886","addr":"Jl. Raya Villa Tangerang Indah RT.003/RW.012 Gebang Raya Kec. Periuk Tangerang 15132","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":54,"mtd":"4.2B","target":"2.8B"},{"id":"E370","name":"Erafone Franchise Ruko Beringin Karawaci","type":"Erafone","city":"Tangerang","area":"Tangerang","mall":"Ruko Beringin","sl":"Sugianto","hp":"6285888026212","addr":"Jl. Beringin Raya Kel. Nusa Jaya, Kec. Tangerang  Kota Tangerang","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":71,"mtd":"2.3B","target":"4.5B"},{"id":"E251","name":"Erafone Ruko Cimone","type":"Erafone","city":"Tangerang","area":"Tangerang","mall":"Cimone","sl":"Muhamad Pardiansyah","hp":"6281210713853","addr":"Jalan Raya Merdeka, RT.002/RW01, Cimone Jaya , Karawaci Tangerang","lat":-6.1717,"lng":106.64,"method":"EXACT_MALL","skor":58,"mtd":"1.5B","target":"3.6B"},{"id":"G508","name":"Erablue Taman Cibodas","type":"Erablue","city":"Tangerang","area":"Tangerang","mall":"Taman Cibodas","sl":"Denny Sanjaya","hp":"6287880208886","addr":"Jalan Raya Taman Cibodas No. 14 No. 10A, RT 005, RW 004, terletak di Kel/Desa Sangiang Jaya, Kecamatan Periuk, Kota Tangerang, Provinsi Banten","lat":-6.1571,"lng":106.5975,"method":"EXACT_MALL","skor":59,"mtd":"4.1B","target":"1.9B"},{"id":"N337","name":"Honor Bintaro Xchange","type":"Honor","city":"Tangerang Selatan","area":"Tangerang","mall":"Bintaro X-Change","sl":"Ruri Junas","hp":"628192240698","addr":"Mall Bintaro Jaya Xchange Jl. Lkr. Jaya No.24, Pd. Jaya, Kec. Pd. Aren, Tangerang, Banten 15227","lat":-6.2698,"lng":106.7162,"method":"ADDR_MALL","skor":76,"mtd":"2.4B","target":"4.1B"},{"id":"N125","name":"Huawei Experience Shop Summarecon Mal Serpong","type":"Huawei","city":"Tangerang","area":"Kabupaten Tangerang","mall":"Summarecon Mall Serpong","sl":"Denny Rivaldi","hp":"62895604478080","addr":"Summarecon mall serpong 1,jl.Gading serpong Boulevard no 1,pakulonan barat,kec.kelapa dua.tangerang,banten 15810","lat":-6.2484,"lng":106.64,"method":"EXACT_MALL","skor":53,"mtd":"1.8B","target":"3.8B"},{"id":"N075","name":"Huawei Experience Shop Mall Taman Anggrek","type":"Huawei","city":"Jakarta Barat","area":"Jakbar","mall":"Mall Taman Anggrek","sl":"Dwi Anang Krismanto","hp":"628989610878","addr":"Mall Taman Anggrek Lt. 3 LOT E02/E02A, Jl. Letjen S. Parman St No.28, RT.12/RW.1, Tomang, Grogol petamburan, West Jakarta City, Jakarta 11440","lat":-6.1798,"lng":106.7924,"method":"EXACT_MALL","skor":99,"mtd":"3.5B","target":"5.3B"},{"id":"N330","name":"Huawei Puri Indah Mall","type":"Huawei","city":"Jakarta Barat","area":"Jakbar","mall":"Puri Indah Mall","sl":"Redo Fernando","hp":"6281510447633","addr":"Mall Puri Indah P-124 lantai 2 , Toko Huawei. Jl. Puri Agung No.1 Kembangan Sel, Kec. Kembangan. Kota Jakarta Barat","lat":-6.1756,"lng":106.731,"method":"EXACT_MALL","skor":98,"mtd":"3.5B","target":"4.1B"},{"id":"N360","name":"Huawei K Mall At Menara Jakarta","type":"Huawei","city":"Jakarta Barat","area":"Jakbar","mall":"Menara Jakarta","sl":"Irfan Ardi Wiansyah","hp":"6287789806141","addr":"Jl. Kota Baru Bandar Kemayoran L1-29 South Gunung Sahari, Kemayoran, Central Jakarta City, Jakarta 10610","lat":-6.1688,"lng":106.763,"method":"CITY_FALLBACK","skor":72,"mtd":"2.2B","target":"3.6B"},{"id":"N391","name":"Huawei Central Park Mall","type":"Huawei","city":"Jakarta Barat","area":"Jakbar","mall":"Central Park","sl":"Asep Mulyadi","hp":"6281779964350","addr":"Mall Central Park, Jl. Tanjung Duren Raya No. Selatan Lt.1, 103, Tj. Duren Selatan, Kec. Grogol Petamburan, Kota Jakarta Barat.","lat":-6.1779,"lng":106.7908,"method":"EXACT_MALL","skor":76,"mtd":"3.3B","target":"5.5B"},{"id":"S194","name":"Samsung Agora Mall","type":"Samsung","city":"Jakarta Barat","area":"Jakbar","mall":"Agora Mall","sl":"Irvan Egi Saputra","hp":"6285780760279","addr":"F2 #K01C Agora Mall - Thamrin Nine complex JL. M. H. Thamrin no 10 Kb. Melati, Kecamatan Tanah Abang, Kota Jakarta Pusat, Daerah Khusus Ibukota Jakarta 10230","lat":-6.1914,"lng":106.8252,"method":"EXACT_MALL","skor":88,"mtd":"5.0B","target":"4.2B"},{"id":"S136","name":"Samsung Partner Plaza Pandeglang","type":"Samsung","city":"Pandeglang","area":"Banten","mall":"Ruko Pandeglang","sl":"Yossy","hp":"6287893441999","addr":"Jl. Raya Labuan, RT 001/003, kel. Karaton, Kec. Majasari, Kabupaten Pandeglang, Banten 42218","lat":-6.3085,"lng":106.106,"method":"EXACT_MALL","skor":67,"mtd":"2.8B","target":"1.7B"},{"id":"S158","name":"Samsung (Sep) Serpong Paradise","type":"Samsung","city":"Tangerang Selatan","area":"Tangerang Selatan","mall":"Paradise Walk Serpong","sl":"Saiful Anwar","hp":"6287775578109","addr":"Jl. Paradise Serpong City, Bababakan, Kec. Setu, Kota Tangerang Selatan, Banten 15315","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":71,"mtd":"3.9B","target":"5.9B"},{"id":"S190","name":"Samsung Bintaro X Change Ii","type":"Samsung","city":"Tangerang Selatan","area":"Tangerang Selatan","mall":"Bintaro X-Change Ii","sl":"Ahmad Noerdiansyah","hp":"6285888117777","addr":"Bintaro Jaya Xchange Mall No. Unit: GF-S-27 , CBD Bintaro Jaya Blok O-2, Bintaro Jaya  Sektor VII, Tangerang Selatan 15227","lat":-6.2698,"lng":106.7162,"method":"ADDR_MALL","skor":96,"mtd":"1.6B","target":"4.1B"},{"id":"S201","name":"Samsung Hampton Square Serpong","type":"Samsung","city":"Tangerang","area":"Kabupaten Tangerang","mall":"Hampton Square Serpong","sl":"Ano Riyansah","hp":"6289695948022","addr":"Jl. Gading Serpong Boulevard, Medang, Kec. Pagedangan, Kabupaten Tangerang, Banten 15810","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":58,"mtd":"5.4B","target":"4.4B"},{"id":"X135","name":"Ibox Edc","type":"iBox","city":"Tangerang Kabupaten","area":"Tangerang","mall":"Pik","sl":"Abdul Hafiz","hp":"6281380562567","addr":"JL HR.Rasuna Said kavling BB-15, PIK 2 NO. 1 Kel. Salembaran Kec. Kosambi Kab. Tangerang kode POS 15214","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":75,"mtd":"3.6B","target":"5.1B"},{"id":"M193","name":"Erafone & More Edc","type":"Erafone","city":"Tangerang Kabupaten","area":"Tangerang","mall":"Pik","sl":"Sandi Prasetia","hp":"628179235803","addr":"JL HR.Rasuna Said kavling BB-15, PIK 2 NO.10 Kel. Salembaran Kec. Kosambi Kab. Tangerang kode POS 15214","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":55,"mtd":"3.8B","target":"2.2B"},{"id":"S183","name":"Samsung Edc","type":"Samsung","city":"Tangerang Kabupaten","area":"Tangerang","mall":"Pik","sl":"Mahmud Efendi","hp":"6289602756105","addr":"JL HR.Rasuna Said kavling BB-15, PIK 2 NO.9 Kel. Salembaran Kec. Kosambi Kab. Tangerang kode POS 15214","lat":-6.1783,"lng":106.6319,"method":"CITY_FALLBACK","skor":79,"mtd":"1.7B","target":"2.9B"}];
+
+// Sales scores pre-loaded from data
+
+let map, markers=[], activeEl=null, curS=null;
+let fT='all', fA='all', fSales='all', fQ='', is3D=true;
+
+
+// Clock
+setInterval(()=>{
+  const n=new Date();
+  document.getElementById('clock').textContent=
+    n.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit',hour12:false})+' WIB';
+},1000);
+
+// Topbar counts
+function updateCounts(){
+  const placed=STORES_RAW.filter(s=>s.lat);
+  document.getElementById('cef').textContent=placed.filter(s=>s.type==='Erafone').length;
+  document.getElementById('ceb').textContent=placed.filter(s=>s.type==='Erablue').length;
+  document.getElementById('cib').textContent=placed.filter(s=>s.type==='iBox').length;
+  document.getElementById('ctot').textContent=placed.length;
+  document.getElementById('sct').textContent=placed.length;
+}
+
+// Geocoding removed — coords pre-loaded
+
+// ── MAP INIT ──
+window.addEventListener('load',()=>{
+  document.getElementById('lmsg').textContent='Memuat tile peta...';
+  mapboxgl.accessToken=TOKEN;
+  map=new mapboxgl.Map({
+    container:'map',style:'mapbox://styles/mapbox/light-v11',
+    center:[106.72,-6.25],zoom:10,pitch:48,bearing:-14,antialias:true
+  });
+  map.addControl(new mapboxgl.NavigationControl({showCompass:false}),'bottom-right');
+  map.addControl(new mapboxgl.ScaleControl(),'bottom-left');
+  map.on('load',()=>{
+    map.addLayer({id:'3db',source:'composite','source-layer':'building',
+      filter:['==','extrude','true'],type:'fill-extrusion',minzoom:13,
+      paint:{
+        'fill-extrusion-color':['interpolate',['linear'],['get','height'],
+          [0,'#dbeafe'],[50,'#bfdbfe'],[100,'#93c5fd'],[200,'#60a5fa']],
+        'fill-extrusion-height':['interpolate',['linear'],['zoom'],[13,0],[14,['get','height']]],
+        'fill-extrusion-base':['interpolate',['linear'],['zoom'],[13,0],[14,['get','min_height']]],
+        'fill-extrusion-opacity':0.7}});
+    map.on('mousemove',e=>{
+      document.getElementById('coord').textContent=
+        e.lngLat.lat.toFixed(4)+', '+e.lngLat.lng.toFixed(4);});
+    // Koordinat sudah hardcoded — langsung plot semua pin
+    buildMarkers(STORES_RAW);
+    renderList(getFil());
+    updateCounts();
+    const ld=document.getElementById('loading');
+    ld.style.opacity='0'; setTimeout(()=>ld.style.display='none',400);
+  });
+});
+
+// ── MARKERS ──
+
+function makePinSVG(type) {
+  const cfg = {
+    'Erafone':        {body:'#E53E3E',body2:'#C53030',stroke:'#9B2C2C',label:'e',fs:15,fw:800},
+    'Erafone & More': {body:'#E67E22',body2:'#D35400',stroke:'#B7460E',label:'e+',fs:12,fw:800},
+    'iBox':           {body:'#2D3748',body2:'#1A202C',stroke:'#0a0a0a',label:'i',fs:16,fw:800},
+    'Samsung':        {body:'#1A56DB',body2:'#1041B3',stroke:'#0C35A0',label:'S',fs:14,fw:800},
+    'Erablue':        {body:'#00B5D8',body2:'#00A3C4',stroke:'#0987A0',label:'EB',fs:11,fw:800},
+    'Huawei':         {body:'#276749',body2:'#1C4532',stroke:'#1C4532',label:'H',fs:14,fw:800},
+    'Honor':          {body:'#6B46C1',body2:'#553C9A',stroke:'#44337A',label:'H',fs:14,fw:800},
+    'Xiaomi':         {body:'#E53E3E',body2:'#C53030',stroke:'#9B2C2C',label:'mi',fs:12,fw:800},
+  };
+  const c = cfg[type] || {body:'#718096',body2:'#4A5568',stroke:'#2D3748',label:'?',fs:14,fw:700};
+  const id = 'pg'+Math.random().toString(36).slice(2,7);
+  return `<svg width="36" height="46" viewBox="0 0 36 46" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 3px 6px rgba(0,0,0,0.25));overflow:visible">
+    <defs>
+      <radialGradient id="${id}" cx="38%" cy="28%" r="72%">
+        <stop offset="0%" stop-color="${c.body}" stop-opacity="1"/>
+        <stop offset="100%" stop-color="${c.body2}" stop-opacity="1"/>
+      </radialGradient>
+    </defs>
+    <path d="M18 1.5C10.0 1.5 3.5 8.0 3.5 16C3.5 27 18 44.5 18 44.5C18 44.5 32.5 27 32.5 16C32.5 8.0 26.0 1.5 18 1.5Z"
+      fill="url(#${id})" stroke="${c.stroke}" stroke-width="0.8"/>
+    <circle cx="18" cy="16" r="9.5" fill="white" opacity="0.96"/>
+    <text x="18" y="${16 + c.fs*0.38}" text-anchor="middle"
+      font-size="${c.fs}" font-weight="${c.fw}" fill="${c.body2}"
+      font-family="'Plus Jakarta Sans',Arial,sans-serif" dominant-baseline="central">${c.label}</text>
+  </svg>`;
+}
+
+function buildMarkers(stores){
+  markers.forEach(m=>m.remove()); markers=[];
+  stores.filter(s=>s.lat&&s.lng).forEach(s=>{
+    const c=TC[s.type]||'#888';
+    const w=document.createElement('div');
+    w.style.cssText='position:relative;width:36px;height:46px;cursor:pointer;transition:transform .15s;transform-origin:bottom center';
+    w.innerHTML=makePinSVG(s.type);
+    w.addEventListener('mouseenter',()=>{if(activeEl!==w)w.style.transform='scale(1.25)';});
+    w.addEventListener('mouseleave',()=>{if(activeEl!==w)w.style.transform='scale(1)';});
+    w.addEventListener('click',()=>{
+      // Reset transform semua marker lain
+      markers.forEach(m=>{ if(m._w&&m._w!==w) m._w.style.transform='scale(1)'; });
+      openDet(s,w,null,c);
+    });
+    const m=new mapboxgl.Marker({element:w,anchor:'bottom'}).setLngLat([s.lng,s.lat]).addTo(map);
+    m._s=s;m._w=w;m._d=null;m._c=c; markers.push(m);
+  });
+}
+
+// ── DETAIL ──
+function scCls(v){return v>=80?'ok':v>=60?'warn':'bad';}
+function bCol(v){return v>=80?'linear-gradient(90deg,#059669,#0891b2)':v>=60?'linear-gradient(90deg,#d97706,#f59e0b)':'linear-gradient(90deg,#dc2626,#ef4444)';}
+
+function openDet(s,w,dot,c){
+  if(activeEl){activeEl.style.transform='scale(1)';}
+  activeEl=w; curS=s;
+  if(w&&w.style) w.style.transform='scale(1.3)';
+
+  const [bg,col]=BDGC[s.type]||['#f3f4f6','#374151'];
+  const bdg=document.getElementById('dbdg');
+  bdg.textContent=s.type;
+  bdg.style.cssText=`background:${bg};color:${col};border-color:${col}30;display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;border:1px solid;margin-bottom:8px;letter-spacing:.3px`;
+
+  document.getElementById('did').textContent='Kode: '+s.id;
+  document.getElementById('dname').textContent=s.name;
+  document.getElementById('d-city').textContent=s.city||'—';
+  document.getElementById('d-area').textContent=s.area||'—';
+  document.getElementById('d-type').textContent=s.type;
+  document.getElementById('d-mall').textContent=s.mall&&s.mall!=='nan'?s.mall:'—';
+  document.getElementById('d-sl').textContent=s.sl||'—';
+  document.getElementById('d-av').textContent=(s.sl||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+  document.getElementById('d-addr').textContent=s.addr||'—';
+
+  // Sales tab (demo data)
+  const sc=s.skor||70;
+  const ache=document.getElementById('d-ach');
+  ache.textContent=sc+'%'; ache.className='hcell-val '+scCls(sc);
+  document.getElementById('d-mtd').textContent=s.mtd||'—';
+  document.getElementById('d-target').textContent=s.target||'—';
+  const ste=document.getElementById('d-status');
+  ste.textContent=sc>=80?'On Track':sc>=60?'At Risk':'Below Target';
+  ste.className='hcell-val '+(sc>=80?'ok':sc>=60?'warn':'bad');
+
+  document.getElementById('detail').classList.add('show');
+  if(s.lat&&s.lng) map.flyTo({center:[s.lng,s.lat],zoom:15,pitch:52,bearing:-18,duration:1100,essential:true});
+
+  document.querySelectorAll('.si').forEach(i=>i.classList.remove('active'));
+  const li=document.querySelector(`.si[data-id="${s.id}"]`);
+  if(li){li.classList.add('active');li.scrollIntoView({behavior:'smooth',block:'nearest'});}
+  switchTab(document.querySelector('.dtab.on')||document.querySelector('.dtab'),'info');
+}
+
+function openDetNoMap(s){
+  // Buka detail panel tanpa interaksi marker (fallback)
+  if(activeEl){activeEl.style.transform='scale(1)';}
+  activeEl=null; curS=s;
+  const c=TC[s.type]||'#888';
+  const [bg,col]=BDGC[s.type]||['#f3f4f6','#374151'];
+  const bdg=document.getElementById('dbdg');
+  bdg.textContent=s.type;
+  bdg.style.cssText=`background:${bg};color:${col};border-color:${col}30;display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;border:1px solid;margin-bottom:8px;letter-spacing:.3px`;
+  document.getElementById('did').textContent='Kode: '+s.id;
+  document.getElementById('dname').textContent=s.name;
+  document.getElementById('d-city').textContent=s.city||'—';
+  document.getElementById('d-area').textContent=s.area||'—';
+  document.getElementById('d-type').textContent=s.type;
+  document.getElementById('d-mall').textContent=s.mall&&s.mall!=='nan'?s.mall:'—';
+  document.getElementById('d-sl').textContent=s.sl||'—';
+  document.getElementById('d-av').textContent=(s.sl||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+  document.getElementById('d-addr').textContent=s.addr||'—';
+  const sc=s.skor||70;
+  const ache=document.getElementById('d-ach');
+  ache.textContent=sc+'%'; ache.className='hcell-val '+(sc>=80?'ok':sc>=60?'warn':'bad');
+  document.getElementById('d-mtd').textContent=s.mtd||'—';
+  document.getElementById('d-target').textContent=s.target||'—';
+  const ste=document.getElementById('d-status');
+  ste.textContent=sc>=80?'On Track':sc>=60?'At Risk':'Below Target';
+  ste.className='hcell-val '+(sc>=80?'ok':sc>=60?'warn':'bad');
+  document.getElementById('detail').classList.add('show');
+  if(s.lat&&s.lng&&map) map.flyTo({center:[s.lng,s.lat],zoom:15,pitch:52,bearing:-18,duration:1100,essential:true});
+  document.querySelectorAll('.si').forEach(i=>i.classList.remove('active'));
+  const li=document.querySelector(`.si[data-id="${s.id}"]`);
+  if(li){li.classList.add('active');li.scrollIntoView({behavior:'smooth',block:'nearest'});}
+}
+
+function closeDet(){
+  document.getElementById('detail').classList.remove('show');
+  if(activeEl){activeEl.style.transform='scale(1)';}
+  activeEl=null;curS=null;
+  document.querySelectorAll('.si').forEach(i=>i.classList.remove('active'));
+}
+function switchTab(el,id){
+  document.querySelectorAll('.dtab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.dtab-pane').forEach(p=>p.classList.remove('show'));
+  if(el)el.classList.add('on');
+  document.getElementById('tab-'+id).classList.add('show');
+}
+function openMaps(){if(curS&&curS.lat)window.open(`https://maps.google.com/?q=${curS.lat},${curS.lng}`,'_blank');}
+function openWA(){if(curS&&curS.hp)window.open(`https://wa.me/${curS.hp}`,'_blank');}
+
+// ── FILTER ──
+function getFil(){
+  const q=fQ.toLowerCase();
+  return STORES_RAW.filter(s=>{
+    const mT=fT==='all'||s.type===fT;
+    const mA=fA==='all'||s.area===fA||s.city===fA;
+    const sc=s.skor||70;
+    const mS=fSales==='all'||(fSales==='high'&&sc>=80)||(fSales==='mid'&&sc>=60&&sc<80)||(fSales==='low'&&sc<60);
+    const mQ=!q||s.name.toLowerCase().includes(q)||s.id.toLowerCase().includes(q)||s.city.toLowerCase().includes(q)||s.mall.toLowerCase().includes(q);
+    return mT&&mA&&mS&&mQ;
+  });
+}
+function applyFil(){
+  const f=getFil();
+  renderList(f);
+  const ids=new Set(f.map(s=>s.id));
+  markers.forEach(m=>m.getElement().style.display=ids.has(m._s.id)?'':'none');
+  document.getElementById('sct').textContent=f.length;
+}
+function setT(el,v){document.querySelectorAll('[data-t]').forEach(c=>c.className='chip');el.className='chip on'+(v!=='all'?' '+(TCL[v]||''):'');fT=v;applyFil();}
+function setA(el,v){document.querySelectorAll('[data-a]').forEach(c=>c.className='chip');el.className='chip on';fA=v;applyFil();}
+function setSales(el,v){document.querySelectorAll('[data-s]').forEach(c=>c.className='chip');el.className='chip on';fSales=v;applyFil();}
+function doFilter(){fQ=document.getElementById('search').value;applyFil();}
+
+function renderList(stores){
+  const list=document.getElementById('store-list');list.innerHTML='';
+  const from=stores.slice(0,120); // show max 120 in list
+  from.forEach(s=>{
+    const c=TC[s.type]||'#888';
+    const sc=s.skor||70;
+    const scC=sc>=80?'var(--ok)':sc>=60?'var(--warn)':'var(--bad)';
+    const d=document.createElement('div');
+    d.className='si';d.dataset.id=s.id;
+    d.innerHTML=`<div class="si-dot" style="background:${c}"></div>
+      <div class="si-info">
+        <div class="si-name">${s.name}</div>
+        <div class="si-sub">${s.id} · ${s.city}</div>
+      </div>
+      <div class="si-badge" style="color:${scC};border-color:${scC}33;background:${scC}11">${sc}%</div>`;
+    d.addEventListener('click',()=>{
+      if(!s.lat){
+        // Toko belum ter-geocode — tampilkan detail tanpa fly
+        openDetNoMap(s);
+        return;
+      }
+      const m=markers.find(mk=>mk._s.id===s.id);
+      if(m) openDet(s,m._w,m._d,m._c);
+      else   openDetNoMap(s);
+    });
+    list.appendChild(d);
+  });
+  if(stores.length>120){
+    const more=document.createElement('div');
+    more.style.cssText='text-align:center;padding:8px;font-size:11px;color:var(--text3)';
+    more.textContent=`+${stores.length-120} toko lainnya. Gunakan filter untuk mempersempit.`;
+    list.appendChild(more);
+  }
+}
+
+function toggle3D(){
+  is3D=!is3D;
+  const b=document.getElementById('b3d');
+  b.textContent=is3D?'3D Gedung':'2D Map';
+  b.classList.toggle('on',is3D);
+  map.easeTo({pitch:is3D?48:0,bearing:is3D?-14:0,duration:900});
+}
+function resetView(){if(map)map.flyTo({center:[106.72,-6.25],zoom:10,pitch:48,bearing:-14,duration:900});}
+</script>
+</body>
+</html>
